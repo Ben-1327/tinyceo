@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "facilities": [
+    {
+      "id": "FAC_DESK_BASIC",
+      "name": "Basic Desk",
+      "upfrontCostJPY": 20000,
+      "effects": [
+        {
+          "op": "CAPACITY_EMPLOYEES",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "FAC_MEETING_ROOM",
+      "name": "Meeting Room",
+      "upfrontCostJPY": 120000,
+      "effects": [
+        {
+          "op": "PM_OUTPUT_MULT",
+          "value": 1.1
+        },
+        {
+          "op": "COMMS_MULT",
+          "value": 1.05
+        }
+      ]
+    },
+    {
+      "id": "FAC_SERVER_RACK",
+      "name": "Server Rack",
+      "upfrontCostJPY": 150000,
+      "effects": [
+        {
+          "op": "CICD_EFFECT_MULT",
+          "value": 1.1
+        }
+      ]
+    },
+    {
+      "id": "FAC_RELAX_CORNER",
+      "name": "Relax Corner",
+      "upfrontCostJPY": 80000,
+      "effects": [
+        {
+          "op": "TEAM_HEALTH_RECOVERY_MULT",
+          "value": 1.1
+        }
+      ]
+    }
+  ]
+}

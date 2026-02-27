@@ -1,0 +1,17 @@
+Source: https://opengameart.org/content/indoor-office-appliances
+Asset: Indoor office appliances
+Author: semtex99
+Raw Files:
+- assets/raw/opengameart/indoor-office-appliances/office-tilemap.png
+- assets/raw/opengameart/indoor-office-appliances/source_page.html
+License: CC0 1.0 Universal
+Acquired: 2026-02-27
+
+Source: https://opengameart.org/content/office-8x8-tileset
+Asset: office 8x8 tileset
+Author: Danielfib
+Raw Files:
+- assets/raw/opengameart/office-8x8-tileset/*.png
+- assets/raw/opengameart/office-8x8-tileset/source_page.html
+License: CC0 1.0 Universal
+Acquired: 2026-02-27

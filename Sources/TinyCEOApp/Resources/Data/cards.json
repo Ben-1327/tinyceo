@@ -1,0 +1,4450 @@
+{
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "id": "CARD_000_VISION",
+      "title": "会社の方向性を決めよう（最初の一歩）",
+      "category": "STRATEGY",
+      "rarity": "COMMON",
+      "baseWeight": 999,
+      "cooldownCycles": 999,
+      "trigger": "ON_START",
+      "conditions": [
+        {
+          "metric": "day",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "受託で食いながら、SaaSも育てる（王道）",
+          "effects": [
+            {
+              "op": "SET_STRATEGY",
+              "value": "BALANCED"
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "まずは受託でキャッシュ最優先（堅実）",
+          "effects": [
+            {
+              "op": "SET_STRATEGY",
+              "value": "CONTRACT_HEAVY"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 30000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "プロダクト優先で未来に賭ける（尖る）",
+          "effects": [
+            {
+              "op": "SET_STRATEGY",
+              "value": "PRODUCT_HEAVY"
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -20000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_001_FIRST_CLIENT",
+      "title": "最初の案件が来た：どれを受ける？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 50,
+      "cooldownCycles": 999,
+      "trigger": "ON_START",
+      "conditions": [
+        {
+          "flag": "hasAcceptedFirstContract",
+          "op": "==",
+          "value": false
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "Slack Bot自動化（小さく早い）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_CONTRACT_SLACK_BOT"
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasAcceptedFirstContract",
+              "value": true
+            }
+          ]
+        },
+        {
+          "label": "KPIダッシュボード（Ops寄り）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_CONTRACT_DASHBOARD"
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasAcceptedFirstContract",
+              "value": true
+            }
+          ]
+        },
+        {
+          "label": "データ移行（地味に儲かる）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_CONTRACT_MIGRATION"
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasAcceptedFirstContract",
+              "value": true
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_002_PRODUCT_IDEA",
+      "title": "SaaSの種：何を作る？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 35,
+      "cooldownCycles": 999,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "flag": "hasDefinedProductIdea",
+          "op": "==",
+          "value": false
+        },
+        {
+          "metric": "projectsCompletedContracts",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "社内向け運用ツールを外販（B2B）",
+          "effects": [
+            {
+              "op": "SET_FLAG",
+              "key": "productIdea",
+              "value": "B2B_INTERNAL_TOOL"
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasDefinedProductIdea",
+              "value": true
+            }
+          ]
+        },
+        {
+          "label": "AIワークフロー支援（今っぽい）",
+          "effects": [
+            {
+              "op": "SET_FLAG",
+              "key": "productIdea",
+              "value": "AI_WORKFLOW"
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasDefinedProductIdea",
+              "value": true
+            }
+          ]
+        },
+        {
+          "label": "分析/ダッシュボード（堅い）",
+          "effects": [
+            {
+              "op": "SET_FLAG",
+              "key": "productIdea",
+              "value": "ANALYTICS"
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "hasDefinedProductIdea",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_HIRE_ENG_JR",
+      "title": "最初の採用：Jrエンジニアを雇う？",
+      "category": "HIRING",
+      "rarity": "COMMON",
+      "baseWeight": 18,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "cashJPY",
+          "op": ">=",
+          "value": 150000
+        },
+        {
+          "metric": "projectsCompletedContracts",
+          "op": ">=",
+          "value": 1
+        },
+        {
+          "metric": "teamSize",
+          "op": "==",
+          "value": 1
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "採用する（育てる覚悟）",
+          "effects": [
+            {
+              "op": "HIRE_RANDOM",
+              "roleId": "ROLE_ENGINEER_JR",
+              "traitsRoll": 2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -30000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "今回は見送る（自分で回す）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "業務委託でつなぐ（短期）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -20000
+            },
+            {
+              "op": "ADD_TEMP_CAPACITY",
+              "discipline": "DEV",
+              "workUnitsPerDay": 4,
+              "days": 5
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_HIRE_SALES",
+      "title": "売上の壁：Salesを置く？",
+      "category": "HIRING",
+      "rarity": "COMMON",
+      "baseWeight": 18,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "projectsCompletedContracts",
+          "op": ">=",
+          "value": 2
+        },
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "採用する（攻める）",
+          "effects": [
+            {
+              "op": "HIRE_RANDOM",
+              "roleId": "ROLE_SALES",
+              "traitsRoll": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Founderが営業もやる（気合）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            },
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "価格を上げて案件数を減らす（少数精鋭）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            },
+            {
+              "op": "SET_FLAG",
+              "key": "pricingMode",
+              "value": "PREMIUM"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 40000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_HIRE_OPS",
+      "title": "Opsを入れて仕組み化する？",
+      "category": "HIRING",
+      "rarity": "COMMON",
+      "baseWeight": 18,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 3
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "Ops採用（放置耐性UP）",
+          "effects": [
+            {
+              "op": "HIRE_RANDOM",
+              "roleId": "ROLE_OPS",
+              "traitsRoll": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "自動化で頑張る（Founder Ops）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "いったん後回し（燃えやすい）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 20000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_HIRE_PM",
+      "title": "PMが欲しい：任命する？",
+      "category": "HIRING",
+      "rarity": "COMMON",
+      "baseWeight": 18,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 4
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "PM採用（同時進行が増える）",
+          "effects": [
+            {
+              "op": "HIRE_RANDOM",
+              "roleId": "ROLE_PM",
+              "traitsRoll": 2
+            },
+            {
+              "op": "UNLOCK_POLICY",
+              "policyId": "POL_PM_CADENCE"
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "FounderがPMもやる（今は踏ん張る）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "案件数を絞る（集中）",
+          "effects": [
+            {
+              "op": "SET_FLAG",
+              "key": "maxActiveProjectsOverride",
+              "value": 1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_HIRE_DESIGN",
+      "title": "デザインが弱い：Designerを雇う？",
+      "category": "HIRING",
+      "rarity": "COMMON",
+      "baseWeight": 18,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "hasProductLaunched",
+          "op": "==",
+          "value": true
+        },
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 3
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "採用する（見た目とUX）",
+          "effects": [
+            {
+              "op": "HIRE_RANDOM",
+              "roleId": "ROLE_DESIGNER",
+              "traitsRoll": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "テンプレで凌ぐ（短期）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 15000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "外注（コスト高）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -30000
+            },
+            {
+              "op": "ADD_TEMP_CAPACITY",
+              "discipline": "DESIGN",
+              "workUnitsPerDay": 4,
+              "days": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_POL_REVIEW",
+      "title": "品質の分岐：コードレビュー制度を入れる？",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 14,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "policiesEnabled",
+          "op": "NOT_CONTAINS",
+          "value": "POL_CODE_REVIEW"
+        },
+        {
+          "metric": "policiesUnlocked",
+          "op": "CONTAINS",
+          "value": "POL_CODE_REVIEW"
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "入れる（品質と学習）",
+          "effects": [
+            {
+              "op": "ENABLE_POLICY",
+              "policyId": "POL_CODE_REVIEW"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -50000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "入れない（スピード優先）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 4
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 20000
+            }
+          ]
+        },
+        {
+          "label": "限定導入（重要部分だけ）",
+          "effects": [
+            {
+              "op": "ENABLE_POLICY",
+              "policyId": "POL_CODE_REVIEW"
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -20000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_POL_CICD",
+      "title": "デプロイ地獄：CI/CDを整備する？",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 14,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "policiesUnlocked",
+          "op": "CONTAINS",
+          "value": "POL_CICD"
+        },
+        {
+          "metric": "policiesEnabled",
+          "op": "NOT_CONTAINS",
+          "value": "POL_CICD"
+        },
+        {
+          "metric": "policiesUnlocked",
+          "op": "CONTAINS",
+          "value": "POL_CICD"
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "整備する（事故減）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_INTERNAL_CICD"
+            }
+          ]
+        },
+        {
+          "label": "今は手動で耐える（危険）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 3
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 15000
+            }
+          ]
+        },
+        {
+          "label": "外部サービスに投げる（お金で解決）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -60000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_INTERNAL_DOCS",
+      "title": "ナレッジが属人化：ドキュメント化する？",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 14,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "社内プロジェクト化（今やる）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_INTERNAL_DOCS"
+            }
+          ]
+        },
+        {
+          "label": "Notion/Confluenceだけ用意（後で書く…）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "今は走る（負債が増える）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 3
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 20000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_POL_AI_GUIDE",
+      "title": "AI利用が増えた：ガイドラインを作る？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 14,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "aiMaturityLevel",
+          "op": ">=",
+          "value": 1
+        },
+        {
+          "metric": "policiesEnabled",
+          "op": "NOT_CONTAINS",
+          "value": "POL_AI_GUIDELINES"
+        },
+        {
+          "metric": "policiesUnlocked",
+          "op": "CONTAINS",
+          "value": "POL_AI_GUIDELINES"
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "作る（リスク低下）",
+          "effects": [
+            {
+              "op": "ENABLE_POLICY",
+              "policyId": "POL_AI_GUIDELINES"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -20000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "作らない（自由）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "最小限だけ（社内Wikiに）",
+          "effects": [
+            {
+              "op": "ENABLE_POLICY",
+              "policyId": "POL_AI_GUIDELINES"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -8000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_PRICING",
+      "title": "価格戦略を見直すタイミングだ",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 12,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "値上げ（利益↑ 不満↑）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 60000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "据え置き（安定）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "値下げで数を取りに行く（地獄入口）",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 3
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_OUTBOUND",
+      "title": "営業方針：アウトバウンドを強める？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 12,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "強める（リード増）",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 4
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "紹介・コミュニティ中心（評判重視）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            },
+            {
+              "op": "ADD_LEADS",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "広告を回す（お金で解決）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -50000
+            },
+            {
+              "op": "ADD_LEADS",
+              "value": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_PRODUCT_MVP",
+      "title": "SaaSを進める：MVPスコープをどうする？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 12,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "flag": "hasDefinedProductIdea",
+          "op": "==",
+          "value": true
+        },
+        {
+          "metric": "hasProductLaunched",
+          "op": "==",
+          "value": false
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "最小で出す（早いが荒い）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_PRODUCT_MVP"
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "ちゃんと作る（遅いが堅い）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_PRODUCT_MVP"
+            },
+            {
+              "op": "ENABLE_POLICY",
+              "policyId": "POL_CODE_REVIEW"
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -20000
+            }
+          ]
+        },
+        {
+          "label": "受託が先（後回し）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 40000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_PRODUCT_FEATURE",
+      "title": "次の一手：機能追加か、安定化か",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 12,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "hasProductLaunched",
+          "op": "==",
+          "value": true
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "機能追加（MRR↑）",
+          "effects": [
+            {
+              "op": "ADD_PROJECT",
+              "projectId": "PRJ_PRODUCT_FEATURE_EXPORT"
+            }
+          ]
+        },
+        {
+          "label": "安定化（TechDebt↓）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -4
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "サポート強化（CS↑）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_RUNWAY",
+      "title": "資金繰りチェック：どうする？",
+      "category": "FINANCE",
+      "rarity": "COMMON",
+      "baseWeight": 10,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "cashJPY",
+          "op": "<=",
+          "value": 120000
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "コストカット（士気↓）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 40000
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -3
+            }
+          ]
+        },
+        {
+          "label": "値上げ＆選別（評判↓）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 60000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": -2
+            }
+          ]
+        },
+        {
+          "label": "借入でつなぐ（利息）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 120000
+            },
+            {
+              "op": "ADD_DEBT",
+              "value": 120000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_BANK_LOAN",
+      "title": "銀行から連絡：融資の提案が来た",
+      "category": "FINANCE",
+      "rarity": "COMMON",
+      "baseWeight": 10,
+      "cooldownCycles": 10,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "debtJPY",
+          "op": "<=",
+          "value": 100000
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 5
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "受ける（キャッシュ確保）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 200000
+            },
+            {
+              "op": "ADD_DEBT",
+              "value": 200000
+            }
+          ]
+        },
+        {
+          "label": "断る（健全）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さく借りる（バランス）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 80000
+            },
+            {
+              "op": "ADD_DEBT",
+              "value": 80000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_INCIDENT",
+      "title": "本番障害発生：どう対処する？",
+      "category": "CRISIS",
+      "rarity": "UNCOMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "techDebt",
+          "op": ">=",
+          "value": 35
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "即対応（睡眠を捨てる）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -4
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "原因調査してから（遅いが堅い）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -4
+            }
+          ]
+        },
+        {
+          "label": "一時的に機能停止（評判↓）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": -3
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_CHURN",
+      "title": "プロダクトの解約が増えている",
+      "category": "CRISIS",
+      "rarity": "UNCOMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "hasProductLaunched",
+          "op": "==",
+          "value": true
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "サポート強化（CSへ投資）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -30000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "機能追加で押し返す（TechDebt↑）",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 8000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "値下げで止血（MRR↓）",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": -6000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_BURNOUT",
+      "title": "チームが燃えそう：働き方を変える？",
+      "category": "CRISIS",
+      "rarity": "UNCOMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 8,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "teamHealth",
+          "op": "<=",
+          "value": 40
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "休む（進捗↓ でも回復）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 8
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "踏ん張る（短期で稼ぐ）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 70000
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -6
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "label": "優先度を落とす（顧客に相談）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 4
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_CULTURE_1ON1",
+      "title": "1on1を強化する？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 10,
+      "cooldownCycles": 12,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる（健康↑）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 4
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない（今は忙しい）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "月1だけ（最小）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_CULTURE_HACKDAY",
+      "title": "Hack Dayをやる？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 10,
+      "cooldownCycles": 12,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる（AI/創造性↑）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 3
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "やらない（納期優先）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 30000
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            }
+          ]
+        },
+        {
+          "label": "小さくやる（2時間だけ）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_AI_PROMPTLIB",
+      "title": "社内のプロンプト資産を整備する？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 9,
+      "cooldownCycles": 14,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "aiMaturityLevel",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "整備する（効率↑）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 200
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "属人化のまま（早い）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "最低限だけ（テンプレ数個）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_AI_AUTOREVIEW",
+      "title": "AIにレビューを手伝わせる？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 9,
+      "cooldownCycles": 14,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "aiMaturityLevel",
+          "op": ">=",
+          "value": 3
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "導入（品質↑）",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -15000
+            }
+          ]
+        },
+        {
+          "label": "導入しない（人で回す）",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "実験だけ（限定）",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_INV_PITCH",
+      "title": "投資家との面談：どんなストーリーで行く？",
+      "category": "INVESTOR",
+      "rarity": "RARE",
+      "baseWeight": 6,
+      "cooldownCycles": 30,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "chapterUnlocked",
+          "op": ">=",
+          "value": "CH2_FUNDRAISING"
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "成長率（グロース）を押す",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 3
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -2
+            }
+          ]
+        },
+        {
+          "label": "堅実な収益性を押す",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 50000
+            }
+          ]
+        },
+        {
+          "label": "AI×業務変革を押す",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 3
+            },
+            {
+              "op": "ADD_AI_XP",
+              "value": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_INV_TERM",
+      "title": "タームシートが来た：どれを選ぶ？",
+      "category": "INVESTOR",
+      "rarity": "RARE",
+      "baseWeight": 6,
+      "cooldownCycles": 30,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "chapterUnlocked",
+          "op": ">=",
+          "value": "CH2_FUNDRAISING"
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 18
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "高バリュエーション（希薄化小、条件厳）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 800000
+            },
+            {
+              "op": "ADD_FLAG",
+              "key": "boardControl",
+              "value": "INVESTOR_STRONG"
+            }
+          ]
+        },
+        {
+          "label": "バランス（無難）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 650000
+            },
+            {
+              "op": "ADD_FLAG",
+              "key": "boardControl",
+              "value": "BALANCED"
+            }
+          ]
+        },
+        {
+          "label": "低バリュエーション（希薄化大、自由度）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 550000
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_EXIT_IPO_PREP",
+      "title": "IPO準備：内部統制を固める？",
+      "category": "EXIT",
+      "rarity": "LEGENDARY",
+      "baseWeight": 4,
+      "cooldownCycles": 60,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "chapterUnlocked",
+          "op": ">=",
+          "value": "CH4_EXIT"
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "固める（時間と金）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -200000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -8
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "label": "まだ早い（成長優先）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": -1
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 80000
+            }
+          ]
+        },
+        {
+          "label": "外部に頼る（お金で）",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": -320000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_EXIT_MA",
+      "title": "買収提案が来た：どうする？",
+      "category": "EXIT",
+      "rarity": "LEGENDARY",
+      "baseWeight": 4,
+      "cooldownCycles": 60,
+      "trigger": "CYCLE",
+      "conditions": [
+        {
+          "metric": "chapterUnlocked",
+          "op": ">=",
+          "value": "CH4_EXIT"
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 60
+        }
+      ],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "売る（現金化）",
+          "effects": [
+            {
+              "op": "ENDGAME",
+              "type": "ACQUIRED"
+            }
+          ]
+        },
+        {
+          "label": "断る（独立）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 3
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "交渉する（条件改善）",
+          "effects": [
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            },
+            {
+              "op": "ADD_CASH",
+              "value": 300000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_010",
+      "title": "小さな改善：テンプレを増やす",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -0.5
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_011",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_012",
+      "title": "小さな改善：テンプレを増やす",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -0.5
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_013",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_014",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_015",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_016",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_017",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_018",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_019",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_020",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_021",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_022",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_023",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_024",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_025",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_026",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_027",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_028",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_029",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_030",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_031",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_032",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_033",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_034",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_035",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_036",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_037",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_038",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_039",
+      "title": "ツール購読を見直す？",
+      "category": "FINANCE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 20000
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 10000.0
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": -0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_040",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_041",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_042",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_043",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_044",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_045",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_046",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_047",
+      "title": "既存顧客から追加相談：受ける？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 70000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_CASH",
+              "value": 35000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_048",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_049",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_050",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_051",
+      "title": "ちょい雑談：雑談チャンネル作る？",
+      "category": "CULTURE",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 2
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_052",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_053",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_054",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_055",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_056",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_057",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_058",
+      "title": "小さな改善：テンプレを増やす",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -0.5
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_059",
+      "title": "小さな改善：テンプレを増やす",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -0.5
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_060",
+      "title": "AI活用を増やす？",
+      "category": "AI",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 120
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_AI_XP",
+              "value": 60.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_061",
+      "title": "顧客要望が来た：対応する？",
+      "category": "PRODUCT",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 6000
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_MRR",
+              "value": 3000.0
+            },
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": 1.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_062",
+      "title": "リードが来た：どれを狙う？",
+      "category": "SALES",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 2
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_LEADS",
+              "value": 1.0
+            },
+            {
+              "op": "ADD_REPUTATION",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_063",
+      "title": "小さな改善：テストを少し足す",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -2
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -10000
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1.0
+            },
+            {
+              "op": "ADD_CASH",
+              "value": -5000.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CARD_GEN_064",
+      "title": "小さな改善：テンプレを増やす",
+      "category": "PROCESS",
+      "rarity": "COMMON",
+      "baseWeight": 8,
+      "cooldownCycles": 6,
+      "trigger": "CYCLE",
+      "conditions": [],
+      "weightMultipliers": [],
+      "options": [
+        {
+          "label": "やる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -1
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "やらない",
+          "effects": [
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "小さくやる",
+          "effects": [
+            {
+              "op": "ADD_TECH_DEBT",
+              "value": -0.5
+            },
+            {
+              "op": "ADD_TEAM_HEALTH",
+              "value": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "カードはIDで参照。実装は data/balance.json のルールで抽選/クールダウン/条件解放を処理する。"
+}

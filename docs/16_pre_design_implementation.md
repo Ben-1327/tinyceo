@@ -46,7 +46,7 @@
 - カード選択をリスト+ボタンで処理可能にする
 
 ## 6. 先に固めるべき技術契約（Design-Dev Contract）
-- `GameSnapshot`（UIへ渡す読み取りモデル）を固定
+- `GameViewState`（`SimulationEngine.makeViewState(state:)`）をUIの唯一の入力として固定
 - `Action`（カード選択、設定切替）を固定
 - `NotificationPayload`（タイトル、本文、重要度）を固定
 - `RiskLevel`（normal/warn/danger）を固定
@@ -64,4 +64,3 @@
 - セーブ/ロードで状態が一致する
 - 主要シナリオテストがグリーン
 - デザイン受領後はUI差し替え中心で進められる
-
