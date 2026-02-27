@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "time": {
+    "timeScaleCompanyMinPerRealMin": 12,
+    "ceoCardIntervalRealMinutes": 120,
+    "maxInboxCards": 3,
+    "idleThresholdMinutes": 10,
+    "advanceTimeWhenIdle": false
+  },
+  "economy": {
+    "startingCashJPY": 300000,
+    "overheadJPYPerCompanyDay": 6000,
+    "mrrPaidPerCompanyDayFactor": 0.03333333333333333,
+    "loan": {
+      "enabled": true,
+      "baseInterestAPR": 0.12,
+      "maxDebtToMRRRatio": 6.0
+    }
+  },
+  "workConversion": {
+    "founder": {
+      "categoryRatesWorkUnitsPerRealMinute": {
+        "DEV": {
+          "DEV": 0.08,
+          "OPS": 0.01,
+          "RESEARCH": 0.01
+        },
+        "COMMS": {
+          "PM": 0.03,
+          "SALES": 0.03,
+          "CS": 0.02
+        },
+        "OPS": {
+          "OPS": 0.07,
+          "PM": 0.02,
+          "DEV": 0.01
+        },
+        "RESEARCH": {
+          "RESEARCH": 0.06,
+          "PM": 0.02
+        },
+        "AI": {
+          "DEV": 0.03,
+          "PM": 0.02,
+          "RESEARCH": 0.02
+        },
+        "BREAK": {}
+      },
+      "breakRecoversTeamHealthPerRealMinute": 0.12
+    },
+    "company": {
+      "baseEfficiencyMultiplier": 1.0,
+      "techDebtSpeedPenaltyPerPoint": 0.004,
+      "teamHealthSpeedBonusPerPointFrom50": 0.003
+    }
+  },
+  "dynamics": {
+    "techDebt": {
+      "max": 100,
+      "dailyIncreaseFromRushing": 2,
+      "dailyDecreaseFromOps": 1.5
+    },
+    "teamHealth": {
+      "max": 100,
+      "dailyDecreaseFromOverload": 2,
+      "dailyIncreaseFromCulture": 1.2
+    },
+    "reputation": {
+      "max": 100,
+      "dailyDriftToBaseline": -0.05
+    },
+    "ai": {
+      "maxLevel": 5,
+      "xpPerRealMinuteInAICategory": 1.0,
+      "levelThresholdsXP": [
+        0,
+        240,
+        720,
+        1800,
+        3600,
+        7200
+      ],
+      "workEfficiencyBonusPerLevel": 0.03,
+      "techDebtRiskBonusPerLevel": 0.02
+    }
+  },
+  "limits": {
+    "maxConcurrentProjectsBase": 2,
+    "maxConcurrentProjectsWithPMPolicy": 3
+  }
+}
