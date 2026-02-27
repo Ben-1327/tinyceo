@@ -7,7 +7,7 @@ enum TinyAsset {
             return Image(systemName: sfSymbol)
         }
 
-        if let image = NSImage(named: NSImage.Name(assetName)) {
+        if let image = Bundle.module.image(forResource: NSImage.Name(assetName)) {
             image.isTemplate = true
             return Image(nsImage: image).renderingMode(.template)
         }
@@ -17,14 +17,14 @@ enum TinyAsset {
     }
 
     static func officeSprite(named assetName: String) -> Image? {
-        guard let image = NSImage(named: NSImage.Name(assetName)) else {
+        guard let image = Bundle.module.image(forResource: NSImage.Name(assetName)) else {
             return nil
         }
         return Image(nsImage: image).renderingMode(.original)
     }
 
     static func choiceTexture() -> Image? {
-        guard let image = NSImage(named: NSImage.Name("ui_card_bg")) else {
+        guard let image = Bundle.module.image(forResource: NSImage.Name("ui_card_bg")) else {
             return nil
         }
         return Image(nsImage: image).renderingMode(.original)
