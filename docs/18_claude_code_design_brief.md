@@ -17,6 +17,7 @@
 4. `docs/12_privacy_and_telemetry.md`
 5. `docs/00_overview.md`
 6. `docs/19_github_collaboration_workflow.md`
+7. `docs/20_asset_acquisition_playbook.md`
 
 必要に応じて参照:
 - `docs/11_art_audio_and_assets.md`
@@ -65,3 +66,12 @@
   - 変更ファイル一覧
   - 受け入れ基準への対応
   - 未解決事項 / 質問
+
+## 9. アセット取得指示（重要）
+- まず Claude Code 自身でアセット取得を試みる
+  - 対象: Kenney / 2dPig Pixel Office / OpenGameArt office appliances
+- 取得できた場合:
+  - `docs/20_asset_acquisition_playbook.md` の保存先ルールに従って整理
+- 取得できない場合:
+  - ユーザー向けに「どこで、何を、どう取得し、どこへ配置するか」を具体的に手順化して提示
+  - 手順は `docs/20_asset_acquisition_playbook.md` に沿って不足なく書く

@@ -23,6 +23,7 @@
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）
+- `assets/` : 外部アセット（raw/curated/licenses）
 - `references/` : 参照メモ（類似作・アセット・ライセンス等の出典メモ）
 
 ## 担当分離ガイド
@@ -31,6 +32,7 @@
 - Bootstrap既定値の決定記録: `docs/17_bootstrap_defaults.md`
 - Claude Code向けデザイン依頼ブリーフ: `docs/18_claude_code_design_brief.md`
 - GitHub共同開発ルール: `docs/19_github_collaboration_workflow.md`
+- アセット取得/配置プレイブック: `docs/20_asset_acquisition_playbook.md`
 
 ## スコープ（v0.1）
 - 1人社長 → 小チーム（〜10名）までをメインに遊べる
