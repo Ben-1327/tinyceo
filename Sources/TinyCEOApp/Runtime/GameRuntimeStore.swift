@@ -35,6 +35,15 @@ final class GameRuntimeStore: ObservableObject {
     @Published var showOfficeDecorations: Bool = true {
         didSet { persistPreferenceIfReady(key: showOfficeDecorationsKey, value: showOfficeDecorations) }
     }
+    @Published var playerName: String = GameRuntimeStore.defaultPlayerName {
+        didSet { persistStringPreferenceIfReady(key: playerNameKey, value: playerName) }
+    }
+    @Published var companyName: String = GameRuntimeStore.defaultCompanyName {
+        didSet { persistStringPreferenceIfReady(key: companyNameKey, value: companyName) }
+    }
+    @Published var selectedAvatarID: String = GameRuntimeStore.defaultAvatarID {
+        didSet { persistStringPreferenceIfReady(key: selectedAvatarIDKey, value: selectedAvatarID) }
+    }
 
     private var gameData: GameData?
     private var cardsByID: [String: CardDefinition] = [:]
@@ -57,6 +66,27 @@ final class GameRuntimeStore: ObservableObject {
     private let crisisNotificationsEnabledKey = "crisisNotificationsEnabled"
     private let showChoiceTextureKey = "showChoiceTexture"
     private let showOfficeDecorationsKey = "showOfficeDecorations"
+    private let playerNameKey = "playerName"
+    private let companyNameKey = "companyName"
+    private let selectedAvatarIDKey = "selectedAvatarID"
+
+    static let defaultPlayerName = "あなた"
+    static let defaultCompanyName = "TinyCEO"
+    static let defaultAvatarID = "founder"
+
+    private static let avatarCatalog: [AvatarOption] = [
+        AvatarOption(id: "founder", label: "スタンダード", assetName: "char_founder_01"),
+        AvatarOption(id: "dev", label: "エンジニア", assetName: "char_staff_dev_01"),
+        AvatarOption(id: "pm", label: "プロデューサー", assetName: "char_staff_pm_01")
+    ]
+
+    var avatarOptions: [AvatarOption] {
+        Self.avatarCatalog
+    }
+
+    var founderAvatarAssetName: String {
+        Self.avatarCatalog.first(where: { $0.id == selectedAvatarID })?.assetName ?? "char_founder_01"
+    }
 
     func start() {
         if engine == nil || state == nil || rng == nil {
@@ -123,6 +153,7 @@ final class GameRuntimeStore: ObservableObject {
     }
 
     func completeOnboarding(workIntegrationEnabled: Bool) {
+        normalizeProfileFieldsIfNeeded()
         UserDefaults.standard.set(true, forKey: onboardingCompletedKey)
         setWorkIntegrationEnabled(workIntegrationEnabled)
 
@@ -299,7 +330,7 @@ final class GameRuntimeStore: ObservableObject {
         }
 
         if viewState.showInboxFullBanner {
-            return "Inboxが満杯です。処理が遅れると指標が悪化します。"
+            return "受信箱が満杯です。処理が遅れると指標が悪化します。"
         }
 
         if viewState.runway.riskLevel == .danger || viewState.cashJPY <= 80_000 {
@@ -436,11 +467,30 @@ final class GameRuntimeStore: ObservableObject {
         if userDefaults.object(forKey: showOfficeDecorationsKey) != nil {
             showOfficeDecorations = userDefaults.bool(forKey: showOfficeDecorationsKey)
         }
+        if let storedPlayerName = userDefaults.string(forKey: playerNameKey), !storedPlayerName.isEmpty {
+            playerName = storedPlayerName
+        }
+        if let storedCompanyName = userDefaults.string(forKey: companyNameKey), !storedCompanyName.isEmpty {
+            companyName = storedCompanyName
+        }
+        if let storedAvatarID = userDefaults.string(forKey: selectedAvatarIDKey),
+           Self.avatarCatalog.contains(where: { $0.id == storedAvatarID }) {
+            selectedAvatarID = storedAvatarID
+        }
+
+        normalizeProfileFieldsIfNeeded()
 
         hasLoadedPreferences = true
     }
 
     private func persistPreferenceIfReady(key: String, value: Bool) {
+        guard hasLoadedPreferences else {
+            return
+        }
+        UserDefaults.standard.set(value, forKey: key)
+    }
+
+    private func persistStringPreferenceIfReady(key: String, value: String) {
         guard hasLoadedPreferences else {
             return
         }
@@ -503,14 +553,14 @@ final class GameRuntimeStore: ObservableObject {
 
     private func makeMetricDeltas(before: GameState, after: GameState) -> [MetricDelta] {
         let deltas: [MetricDelta] = [
-            MetricDelta(id: "cash", label: "Cash", sfSymbol: "yensign.circle", delta: Double(after.metrics.cashJPY - before.metrics.cashJPY), format: .currency),
-            MetricDelta(id: "mrr", label: "MRR", sfSymbol: "chart.line.uptrend.xyaxis", delta: Double(after.metrics.mrrJPY - before.metrics.mrrJPY), format: .currency),
-            MetricDelta(id: "debt", label: "Debt", sfSymbol: "creditcard", delta: Double(after.metrics.debtJPY - before.metrics.debtJPY), format: .currency),
-            MetricDelta(id: "reputation", label: "Reputation", sfSymbol: "star.fill", delta: after.metrics.reputation - before.metrics.reputation, format: .oneDecimal),
-            MetricDelta(id: "teamHealth", label: "Team Health", sfSymbol: "heart.fill", delta: after.metrics.teamHealth - before.metrics.teamHealth, format: .oneDecimal),
-            MetricDelta(id: "techDebt", label: "Tech Debt", sfSymbol: "bolt.fill", delta: after.metrics.techDebt - before.metrics.techDebt, format: .oneDecimal),
-            MetricDelta(id: "aiXP", label: "AI XP", sfSymbol: "sparkles", delta: Double(after.metrics.aiXP - before.metrics.aiXP), format: .integer),
-            MetricDelta(id: "leads", label: "Leads", sfSymbol: "person.3.fill", delta: Double(after.metrics.leads - before.metrics.leads), format: .integer)
+            MetricDelta(id: "cash", label: "資金", sfSymbol: "yensign.circle", delta: Double(after.metrics.cashJPY - before.metrics.cashJPY), format: .currency),
+            MetricDelta(id: "mrr", label: "月次売上", sfSymbol: "chart.line.uptrend.xyaxis", delta: Double(after.metrics.mrrJPY - before.metrics.mrrJPY), format: .currency),
+            MetricDelta(id: "debt", label: "借入", sfSymbol: "creditcard", delta: Double(after.metrics.debtJPY - before.metrics.debtJPY), format: .currency),
+            MetricDelta(id: "reputation", label: "評判", sfSymbol: "star.fill", delta: after.metrics.reputation - before.metrics.reputation, format: .oneDecimal),
+            MetricDelta(id: "teamHealth", label: "健康", sfSymbol: "heart.fill", delta: after.metrics.teamHealth - before.metrics.teamHealth, format: .oneDecimal),
+            MetricDelta(id: "techDebt", label: "技術負債", sfSymbol: "bolt.fill", delta: after.metrics.techDebt - before.metrics.techDebt, format: .oneDecimal),
+            MetricDelta(id: "aiXP", label: "AI経験値", sfSymbol: "sparkles", delta: Double(after.metrics.aiXP - before.metrics.aiXP), format: .integer),
+            MetricDelta(id: "leads", label: "見込み客", sfSymbol: "person.3.fill", delta: Double(after.metrics.leads - before.metrics.leads), format: .integer)
         ]
 
         return deltas.filter { !$0.isZero }
@@ -563,6 +613,25 @@ final class GameRuntimeStore: ObservableObject {
         )
     }
 
+    private func normalizeProfileFieldsIfNeeded() {
+        let trimmedPlayer = playerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCompany = companyName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let normalizedPlayer = String((trimmedPlayer.isEmpty ? Self.defaultPlayerName : trimmedPlayer).prefix(20))
+        let normalizedCompany = String((trimmedCompany.isEmpty ? Self.defaultCompanyName : trimmedCompany).prefix(24))
+        let normalizedAvatarID = Self.avatarCatalog.contains(where: { $0.id == selectedAvatarID }) ? selectedAvatarID : Self.defaultAvatarID
+
+        if playerName != normalizedPlayer {
+            playerName = normalizedPlayer
+        }
+        if companyName != normalizedCompany {
+            companyName = normalizedCompany
+        }
+        if selectedAvatarID != normalizedAvatarID {
+            selectedAvatarID = normalizedAvatarID
+        }
+    }
+
     private static func renderValidationSummary(_ issues: [ValidationIssue], maxItems: Int = 6) -> String {
         let lines = issues.prefix(maxItems).map { "- \($0.message)" }
         let truncatedNote: String
@@ -573,6 +642,12 @@ final class GameRuntimeStore: ObservableObject {
         }
         return lines.joined(separator: "\n") + truncatedNote
     }
+}
+
+struct AvatarOption: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let assetName: String
 }
 
 private extension GameViewState {

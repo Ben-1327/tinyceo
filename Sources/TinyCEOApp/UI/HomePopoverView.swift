@@ -72,11 +72,16 @@ struct HomePopoverView: View {
         HStack(spacing: 8) {
             Image(systemName: "building.2.fill")
                 .font(.system(size: 14))
-            Text("TinyCEO")
+            Text(store.companyName)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                .lineLimit(1)
+            Text("代表: \(store.playerName)")
+                .font(.system(size: 10))
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+                .lineLimit(1)
             Spacer()
-            Text("Day \(store.viewState.day)")
+            Text("\(store.viewState.day)日目")
                 .font(.system(size: 12))
                 .foregroundStyle(TinyTokens.ColorToken.textSecondary)
             RiskBadge(level: store.viewState.riskLevel)
@@ -98,7 +103,7 @@ struct HomePopoverView: View {
             HStack(spacing: 6) {
                 StatPill(symbol: "person.3.fill", text: "社員 \(officeSceneState.totalEmployeeCount)名")
                 StatPill(symbol: "hammer.fill", text: "案件 \(store.projectRows.count)")
-                StatPill(symbol: "tray.fill", text: "Inbox \(store.viewState.inboxCount)")
+                StatPill(symbol: "tray.fill", text: "受信 \(store.viewState.inboxCount)")
                 if let focusCategory = store.focusInboxCategory {
                     let spec = EventVisualCatalog.spec(for: focusCategory)
                     StatPill(
@@ -110,7 +115,9 @@ struct HomePopoverView: View {
 
             AnimatedOfficeScene(
                 sceneState: officeSceneState,
-                inboxCount: store.viewState.inboxCount
+                inboxCount: store.viewState.inboxCount,
+                founderAssetName: store.founderAvatarAssetName,
+                showDecorations: store.showOfficeDecorations
             )
 
             Text("会社が成長するほどオフィスがにぎやかになります")
@@ -130,9 +137,6 @@ struct HomePopoverView: View {
         VStack(alignment: .leading, spacing: 12) {
             kpiSection
             projectSection
-            if store.showOfficeDecorations {
-                OfficeDecorationRow(sceneState: officeSceneState)
-            }
         }
     }
 
@@ -170,7 +174,7 @@ struct HomePopoverView: View {
                             .foregroundStyle(TinyTokens.ColorToken.textPrimary)
                         ProgressView(value: row.progress)
                             .tint(TinyTokens.ColorToken.statusHealthy)
-                        Text("\(Int(row.progress * 100))%")
+                        Text(projectProgressText(row.progress))
                             .font(.system(size: 11))
                             .foregroundStyle(TinyTokens.ColorToken.textSecondary)
                     }
@@ -192,7 +196,7 @@ struct HomePopoverView: View {
                 .font(.system(size: 14))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text("Inbox \(store.viewState.inboxCount)件")
+                    Text("受信箱 \(store.viewState.inboxCount)件")
                         .font(.system(size: 13, weight: .medium))
                     if store.viewState.showInboxFullBanner {
                         Text("FULL")
@@ -231,7 +235,7 @@ struct HomePopoverView: View {
         return [
             KPIModel(
                 id: "cash",
-                label: "CASH",
+                label: "資金",
                 valueText: formatJPY(state.cashJPY),
                 assetName: "ui_cash_icon",
                 fallbackSymbol: "yensign.circle",
@@ -240,7 +244,7 @@ struct HomePopoverView: View {
             ),
             KPIModel(
                 id: "runway",
-                label: "RUNWAY",
+                label: "余力",
                 valueText: state.runway.displayText,
                 assetName: nil,
                 fallbackSymbol: "calendar.badge.clock",
@@ -249,7 +253,7 @@ struct HomePopoverView: View {
             ),
             KPIModel(
                 id: "reputation",
-                label: "REP",
+                label: "評判",
                 valueText: "\(Int(state.reputation.rounded()))",
                 assetName: "ui_reputation_icon",
                 fallbackSymbol: "star.fill",
@@ -258,7 +262,7 @@ struct HomePopoverView: View {
             ),
             KPIModel(
                 id: "health",
-                label: "HEALTH",
+                label: "健康",
                 valueText: "\(Int(state.teamHealth.rounded()))",
                 assetName: "ui_health_icon",
                 fallbackSymbol: "heart.fill",
@@ -267,7 +271,7 @@ struct HomePopoverView: View {
             ),
             KPIModel(
                 id: "techDebt",
-                label: "DEBT",
+                label: "負債",
                 valueText: "\(Int(state.techDebt.rounded()))",
                 assetName: "ui_techdebt_icon",
                 fallbackSymbol: "bolt.fill",
@@ -279,6 +283,15 @@ struct HomePopoverView: View {
 
     private func formatJPY(_ value: Int) -> String {
         Self.jpyFormatter.string(from: NSNumber(value: value)) ?? "¥\(value)"
+    }
+
+    private func projectProgressText(_ progress: Double) -> String {
+        let percent = progress * 100
+        if percent > 0, percent < 1 {
+            return "0.1%"
+        }
+        let rounded = (percent * 10).rounded() / 10
+        return "\(rounded)%"
     }
 
     private func reputationRisk(reputation: Double) -> RiskLevel {
@@ -333,10 +346,10 @@ private struct StatPill: View {
 }
 
 private struct AnimatedOfficeScene: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let sceneState: OfficeSceneState
     let inboxCount: Int
+    let founderAssetName: String
+    let showDecorations: Bool
 
     private enum EmployeeKind: Equatable {
         case founder
@@ -390,9 +403,14 @@ private struct AnimatedOfficeScene: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(TinyTokens.ColorToken.bgCell)
 
-                    floorTextureLayer()
+                    floorTextureLayer(size: size)
 
                     officePropsLayer(size: size)
+
+                    if sceneState.growthStage == .seed {
+                        backRowFurnitureLayer(size: size)
+                        frontRowFurnitureLayer(size: size)
+                    }
 
                     backRowCharactersLayer(size: size, time: time)
                     frontRowCharactersLayer(size: size, time: time)
@@ -427,8 +445,11 @@ private struct AnimatedOfficeScene: View {
     // MARK: Layers
 
     @ViewBuilder
-    private func floorTextureLayer() -> some View {
-        if let bg = TinyAsset.officeSprite(named: "office_backdrop_main_2dpig") {
+    private func floorTextureLayer(size: CGSize) -> some View {
+        if sceneState.growthStage == .seed {
+            seedStageBackgroundLayer(size: size)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        } else if showDecorations, let bg = TinyAsset.officeSprite(named: "office_backdrop_main_2dpig") {
             bg
                 .resizable()
                 .interpolation(.none)
@@ -452,7 +473,7 @@ private struct AnimatedOfficeScene: View {
             LinearGradient(
                 colors: [
                     Color.white.opacity(0.015),
-                    Color.black.opacity(0.05)
+                    Color.black.opacity(0.08)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -463,46 +484,115 @@ private struct AnimatedOfficeScene: View {
 
     @ViewBuilder
     private func officePropsLayer(size: CGSize) -> some View {
-        let maturity = stageVisualMaturity
-        let edgePropOpacity = 0.42 + 0.40 * maturity
+        if showDecorations {
+            let maturity = stageVisualMaturity
 
-        LinearGradient(
-            colors: [
-                Color.white.opacity(0.04),
-                .clear
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-
-        VStack(spacing: 0) {
-            Spacer()
-            Rectangle()
-                .fill(Color.black.opacity(0.16))
-                .frame(height: 1)
             LinearGradient(
                 colors: [
-                    .clear,
-                    Color.black.opacity(0.18)
+                    Color.white.opacity(0.04),
+                    .clear
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: size.height * 0.18)
+
+            VStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(Color.black.opacity(0.16))
+                    .frame(height: 1)
+                LinearGradient(
+                    colors: [
+                        .clear,
+                        Color.black.opacity(0.18)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: size.height * 0.18)
+            }
+
+            if sceneState.growthStage != .seed {
+                let edgePropOpacity = 0.42 + 0.40 * maturity
+
+                sprite(name: "office_prop_terminal_2dpig", width: 16, height: 20)
+                    .position(x: size.width * 0.08, y: size.height * 0.76)
+                    .opacity(edgePropOpacity)
+
+                sprite(name: "office_prop_shelf_orange_2dpig", width: 20, height: 28)
+                    .position(x: size.width * 0.92, y: size.height * 0.76)
+                    .opacity(edgePropOpacity)
+
+                if sceneState.showPlant {
+                    sprite(name: "office_plant_01", width: 14, height: 24)
+                        .position(x: size.width * 0.18, y: size.height * 0.75)
+                        .opacity(edgePropOpacity)
+                }
+            }
         }
+    }
 
-        sprite(name: "office_prop_terminal_2dpig", width: 16, height: 20)
-            .position(x: size.width * 0.08, y: size.height * 0.76)
-            .opacity(edgePropOpacity)
+    @ViewBuilder
+    private func seedStageBackgroundLayer(size: CGSize) -> some View {
+        ZStack(alignment: .topLeading) {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.16, green: 0.19, blue: 0.24),
+                    Color(red: 0.11, green: 0.12, blue: 0.15)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
 
-        sprite(name: "office_prop_shelf_orange_2dpig", width: 20, height: 28)
-            .position(x: size.width * 0.92, y: size.height * 0.76)
-            .opacity(edgePropOpacity)
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.04))
+                    .frame(height: 2)
+                Spacer(minLength: 0)
+                Rectangle()
+                    .fill(Color(red: 0.09, green: 0.11, blue: 0.16))
+                    .frame(height: size.height * 0.52)
+            }
 
-        if sceneState.showPlant {
-            sprite(name: "office_plant_01", width: 14, height: 24)
-                .position(x: size.width * 0.18, y: size.height * 0.75)
-                .opacity(edgePropOpacity)
+            ForEach(0..<4, id: \.self) { idx in
+                Rectangle()
+                    .fill(Color.white.opacity(0.10))
+                    .frame(height: 1)
+                    .position(x: size.width * 0.5, y: CGFloat(20 + idx * 18))
+            }
+
+            if showDecorations {
+                sprite(name: "office_prop_window_blue_2dpig", width: 28, height: 22)
+                    .position(x: size.width * 0.24, y: 34)
+                sprite(name: "office_prop_window_note_2dpig", width: 28, height: 22)
+                    .position(x: size.width * 0.50, y: 34)
+                sprite(name: "office_prop_window_blue_2dpig", width: 28, height: 22)
+                    .position(x: size.width * 0.76, y: 34)
+                sprite(name: "office_prop_couch_orange_2dpig", width: 34, height: 18)
+                    .position(x: size.width * 0.81, y: 58)
+                sprite(name: "office_prop_shelf_blue_2dpig", width: 20, height: 28)
+                    .position(x: size.width * 0.92, y: 58)
+                sprite(name: "office_prop_terminal_2dpig", width: 16, height: 20)
+                    .position(x: size.width * 0.09, y: size.height * 0.74)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func backRowFurnitureLayer(size: CGSize) -> some View {
+        ForEach(0..<3, id: \.self) { index in
+            let point = point(anchor: seatAnchors[index], in: size)
+            seatShadow(at: point, active: index < sceneState.activeEmployeeCount)
+            deskUnit(at: point, active: index < sceneState.activeEmployeeCount)
+        }
+    }
+
+    @ViewBuilder
+    private func frontRowFurnitureLayer(size: CGSize) -> some View {
+        ForEach(3..<6, id: \.self) { index in
+            let point = point(anchor: seatAnchors[index], in: size)
+            seatShadow(at: point, active: index < sceneState.activeEmployeeCount)
+            deskUnit(at: point, active: index < sceneState.activeEmployeeCount)
         }
     }
 
@@ -734,6 +824,10 @@ private struct AnimatedOfficeScene: View {
     // MARK: Motion
 
     private func animatedPosition(for index: Int, in size: CGSize, time: TimeInterval) -> CGPoint {
+        if index == 0, sceneState.activeEmployeeCount > 0 {
+            return founderAnimatedPosition(in: size, time: time)
+        }
+
         let base = point(anchor: seatAnchors[index], in: size)
         let speed = sceneState.motionProfile.speedMultiplier
         let seed = phaseSeed[index % phaseSeed.count] * 2 * .pi
@@ -775,6 +869,34 @@ private struct AnimatedOfficeScene: View {
         return CGPoint(x: base.x + dx, y: base.y + dy - 8)
     }
 
+    private func founderAnimatedPosition(in size: CGSize, time: TimeInterval) -> CGPoint {
+        let deskA = point(anchor: seatAnchors[0], in: size)
+        let deskB = point(anchor: seatAnchors[1], in: size)
+        let cycle = (time.truncatingRemainder(dividingBy: 20.0)) / 20.0
+
+        if cycle < 0.40 {
+            let bob = CGFloat(sin(time * 6.8) * 1.3)
+            return CGPoint(x: deskA.x, y: deskA.y + bob - 8)
+        }
+
+        if cycle < 0.58 {
+            let t = (cycle - 0.40) / 0.18
+            let x = lerp(Double(deskA.x), Double(deskB.x), t: t)
+            let y = lerp(Double(deskA.y), Double(deskB.y), t: t) - 8
+            return CGPoint(x: x, y: y)
+        }
+
+        if cycle < 0.82 {
+            let bob = CGFloat(sin(time * 7.1) * 1.1)
+            return CGPoint(x: deskB.x, y: deskB.y + bob - 8)
+        }
+
+        let t = (cycle - 0.82) / 0.18
+        let x = lerp(Double(deskB.x), Double(deskA.x), t: t)
+        let y = lerp(Double(deskB.y), Double(deskA.y), t: t) - 8
+        return CGPoint(x: x, y: y)
+    }
+
     private func defaultMotion(for index: Int) -> SeatMotion {
         switch index {
         case 0, 4:
@@ -796,13 +918,6 @@ private struct AnimatedOfficeScene: View {
     }
 
     // MARK: Helpers
-
-    private var wallTopColor: Color {
-        if colorScheme == .dark {
-            return Color(red: 0.18, green: 0.17, blue: 0.16)
-        }
-        return Color(red: 0.92, green: 0.91, blue: 0.89)
-    }
 
     private var sceneBorderColor: Color {
         switch sceneState.riskLevel {
@@ -848,7 +963,7 @@ private struct AnimatedOfficeScene: View {
     private func characterAssetName(for kind: EmployeeKind) -> String {
         switch kind {
         case .founder:
-            return "char_founder_01"
+            return founderAssetName
         case .dev:
             return "char_staff_dev_01"
         case .pm:
@@ -942,7 +1057,7 @@ private struct OfficeInfoStrip: View {
 
             infoPill(
                 symbol: inboxCount > 0 ? "tray.fill" : "tray",
-                text: "Inbox \(inboxCount)",
+                text: "受信 \(inboxCount)",
                 color: inboxCount > 0 ? TinyTokens.ColorToken.statusHealthy : TinyTokens.ColorToken.textSecondary
             )
         }
@@ -1079,11 +1194,11 @@ private struct RiskBadge: View {
     private var label: String {
         switch level {
         case .normal:
-            return "NORMAL"
+            return "安定"
         case .warn:
-            return "WARN"
+            return "注意"
         case .danger:
-            return "DANGER"
+            return "危険"
         }
     }
 
@@ -1120,48 +1235,5 @@ private struct CrisisBanner: View {
                 .stroke(TinyTokens.ColorToken.borderDanger, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-private struct OfficeDecorationRow: View {
-    let sceneState: OfficeSceneState
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            sprite("office_desk_01", width: 32, height: 32)
-            sprite("office_monitor_01", width: 32, height: 32)
-            if sceneState.showPlant {
-                sprite("office_plant_01", width: 24, height: 32)
-            }
-
-            Spacer(minLength: 0)
-
-            if sceneState.showDesk2 {
-                sprite("office_desk_02", width: 32, height: 32)
-            }
-            if sceneState.showServer {
-                sprite("office_server_01", width: 24, height: 40)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: TinyTokens.Size.officeRowHeight)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
-        .background(TinyTokens.ColorToken.bgCell)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    @ViewBuilder
-    private func sprite(_ name: String, width: CGFloat, height: CGFloat) -> some View {
-        if let image = TinyAsset.officeSprite(named: name) {
-            image
-                .resizable()
-                .interpolation(.none)
-                .frame(width: width, height: height)
-        }
     }
 }

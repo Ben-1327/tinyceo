@@ -75,7 +75,7 @@ struct CardDetailView: View {
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
             Spacer()
-            Text("Day \(store.viewState.day)")
+            Text("\(store.viewState.day)日目")
                 .font(.system(size: 12))
                 .foregroundStyle(TinyTokens.ColorToken.textSecondary)
         }
@@ -117,52 +117,52 @@ struct CardDetailView: View {
             case "ADD_CASH":
                 let amount = effect.value?.intValue ?? 0
                 return EffectRow(
-                    text: "Cash \(currency(amount))",
+                    text: "資金 \(currency(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             case "ADD_MRR":
                 let amount = effect.value?.intValue ?? 0
                 return EffectRow(
-                    text: "MRR \(currency(amount))",
+                    text: "月次売上 \(currency(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             case "ADD_REPUTATION":
                 let amount = effect.value?.doubleValue ?? 0
                 return EffectRow(
-                    text: "Reputation \(signedNumber(amount))",
+                    text: "評判 \(signedNumber(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             case "ADD_TEAM_HEALTH":
                 let amount = effect.value?.doubleValue ?? 0
                 return EffectRow(
-                    text: "Team Health \(signedNumber(amount))",
+                    text: "健康 \(signedNumber(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             case "ADD_TECH_DEBT":
                 let amount = effect.value?.doubleValue ?? 0
                 return EffectRow(
-                    text: "Tech Debt \(signedNumber(amount))",
+                    text: "技術負債 \(signedNumber(amount))",
                     tone: amount > 0 ? .negative : .positive
                 )
             case "ADD_DEBT":
                 let amount = effect.value?.intValue ?? 0
                 return EffectRow(
-                    text: "Debt \(currency(amount))",
+                    text: "借入 \(currency(amount))",
                     tone: amount > 0 ? .negative : .positive
                 )
             case "SET_STRATEGY":
                 let strategy = effect.value?.stringValue ?? "BALANCED"
-                return EffectRow(text: "Strategy \(strategy)", tone: .neutral)
+                return EffectRow(text: "方針 \(strategyLabel(strategy))", tone: .neutral)
             case "ADD_LEADS":
                 let amount = effect.value?.intValue ?? 0
                 return EffectRow(
-                    text: "Leads \(signedInteger(amount))",
+                    text: "見込み客 \(signedInteger(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             case "ADD_AI_XP":
                 let amount = effect.value?.intValue ?? 0
                 return EffectRow(
-                    text: "AI XP \(signedInteger(amount))",
+                    text: "AI経験値 \(signedInteger(amount))",
                     tone: amount >= 0 ? .positive : .negative
                 )
             default:
@@ -185,6 +185,19 @@ struct CardDetailView: View {
 
     private func signedInteger(_ value: Int) -> String {
         value >= 0 ? "+\(value)" : "\(value)"
+    }
+
+    private func strategyLabel(_ raw: String) -> String {
+        switch raw {
+        case "CONTRACT_HEAVY":
+            return "受託重視"
+        case "PRODUCT_HEAVY":
+            return "プロダクト重視"
+        case "BALANCED":
+            return "バランス"
+        default:
+            return raw
+        }
     }
 }
 

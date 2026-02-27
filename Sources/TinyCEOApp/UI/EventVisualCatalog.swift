@@ -101,7 +101,7 @@ enum EventVisualCatalog {
         case "EXIT":
             return EventVisualSpec(
                 category: category,
-                label: "EXIT",
+                label: "イグジット",
                 iconAssetName: "cat_exit_icon",
                 fallbackSymbol: "flag.checkered",
                 motion: .urgent

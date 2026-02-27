@@ -19,7 +19,7 @@ struct InboxListView: View {
                     Image(systemName: "tray")
                         .font(.system(size: 24))
                         .foregroundStyle(TinyTokens.ColorToken.textSecondary)
-                    Text("Inbox は空です")
+                    Text("受信箱は空です")
                         .font(.system(size: 13))
                         .foregroundStyle(TinyTokens.ColorToken.textSecondary)
                     Spacer()
@@ -59,7 +59,7 @@ struct InboxListView: View {
                 store.openHome()
             }
 
-            Text("Inbox")
+            Text("受信箱")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
 
@@ -74,10 +74,10 @@ struct InboxListView: View {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.octagon.fill")
                     .font(.system(size: 12))
-                Text("INBOX FULL")
+                Text("受信箱が満杯です")
                     .font(.system(size: 11, weight: .semibold))
             }
-            Text("HEALTH -3  TECHDEBT +2  REP -1 / cycle")
+            Text("未処理ペナルティ: 健康 -3 / 技術負債 +2 / 評判 -1")
                 .font(.system(size: 11))
         }
         .foregroundStyle(TinyTokens.ColorToken.statusDanger)
