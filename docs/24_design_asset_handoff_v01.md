@@ -22,7 +22,7 @@
 | 全 KPI セル | ラベルテキスト | SF Pro | SF Pro（システム） | — | 10pt Regular | — | — |
 
 **実装注意:**
-- curated アイコンは `NSBundle.main.image(forResource:)` またはアセットカタログに登録して参照する。
+- curated アイコンは XCAssets に登録して参照する（`NSImage(named:)` / `Image("...")`）。
 - KPIセルのアイコンは KPI の状態（normal/warning/danger）に関係なくアセット画像を使用する。
   状態変化は tint カラーの切り替えで表現する（アイコン画像自体は変えない）。
 - Warning/Danger 時の tint カラー: `status/warning` / `status/danger`（KPI アクセント色を上書き）。
@@ -50,7 +50,7 @@ opacity: 0.10 でレンダリングし、テキスト可読性を確認
 
 ### 1.3 オフィス装飾（Home Popover フッター — Phase 2）
 
-**表示エリア:** Home Popover の Inbox 行の下、24pt 高さのオフィスビュー行として追加する。
+**表示エリア:** Home Popover の Inbox 行の下、40pt 高さの独立オフィスビュー行として追加する。
 **実装タイミング:** v0.1 実装時に余裕がある場合のみ。なければ省略可能。
 
 | コンポーネント | 使用アセット | ファイルパス | レンダリングモード | 表示サイズ | ライセンス | 表示条件 | fallback |
@@ -239,15 +239,13 @@ enum KPIType {
 
 ---
 
-## 5. 未確定事項（Codex への質問）
+## 5. 実装決定事項（Codex確定）
 
-以下は設計上の疑問点。実装前に確認または判断を求める。
-
-| # | 質問 | 設計上の仮定 | 優先度 |
-|---|------|-----------|--------|
-| UQ1 | アセットを XCAssets ではなく `NSBundle.main.image(forResource:)` で直接参照してよいか？ | 直接参照でよい（Asset Catalog 登録は任意） | 高 |
-| UQ2 | オフィス装飾エリアを Home Popover に追加する場合、Inbox 行の下に新セクションを追加するか、Inbox 行と同一行に並列配置するか？ | Inbox 行の下に独立した 32pt 高さの装飾行を追加 | 中 |
-| UQ3 | `ui_card_bg.png` の ChoiceButton テクスチャ使用はデフォルト ON か OFF か？ | デフォルト OFF（オプション機能として扱う） | 低 |
+| # | 決定事項 | 採用方針 | 理由 |
+|---|---------|---------|------|
+| UQ1 | アセット参照方式 | **XCAssets 登録を正**とする。`NSBundle.main.image(forResource:)` はデバッグ・一時読込の補助のみ。 | macOS配布時のバンドル安定性と参照一貫性を優先するため。 |
+| UQ2 | オフィス装飾エリア配置 | **Inbox 行の下に独立行**として追加（高さ 40pt）。Inbox 行内には混在させない。 | 情報行（Inbox）と装飾行（office）を分離し、可読性と拡張性を担保するため。 |
+| UQ3 | `ui_card_bg.png` の既定 | **デフォルト OFF**。必要時のみ feature flag で ON。 | Low-interruption原則とテキスト可読性を優先するため。 |
 
 ---
 
