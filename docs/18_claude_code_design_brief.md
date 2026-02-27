@@ -16,6 +16,7 @@
 3. `docs/10_ux_and_notifications.md`
 4. `docs/12_privacy_and_telemetry.md`
 5. `docs/00_overview.md`
+6. `docs/19_github_collaboration_workflow.md`
 
 必要に応じて参照:
 - `docs/11_art_audio_and_assets.md`
@@ -54,3 +55,13 @@
 - 曖昧点は勝手に埋めず、先に質問する
 - 提案は最低2案出し、理由付きで1案を推奨する
 - 実装者向けに、画面ごとの状態遷移と例外ケースを明記する
+
+## 8. GitHub 作業指示（Claude Code向け）
+- 作業ブランチは `claude/design-*` を使う
+- PRは「デザイン変更のみ」で作る（実装コードは変更しない）
+- 変更対象は原則 `docs/**`（デザイン仕様）
+- PR本文に必ず以下を記載:
+  - 背景と目的
+  - 変更ファイル一覧
+  - 受け入れ基準への対応
+  - 未解決事項 / 質問

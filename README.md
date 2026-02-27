@@ -30,6 +30,7 @@
 - デザイン待ちでも進める実装範囲: `docs/16_pre_design_implementation.md`
 - Bootstrap既定値の決定記録: `docs/17_bootstrap_defaults.md`
 - Claude Code向けデザイン依頼ブリーフ: `docs/18_claude_code_design_brief.md`
+- GitHub共同開発ルール: `docs/19_github_collaboration_workflow.md`
 
 ## スコープ（v0.1）
 - 1人社長 → 小チーム（〜10名）までをメインに遊べる
