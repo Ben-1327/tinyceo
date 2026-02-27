@@ -335,36 +335,37 @@ private struct AnimatedOfficeScene: View {
     let sceneState: OfficeSceneState
     let inboxCount: Int
 
-    /// 6 desk anchors (normalised 0…1) arranged in perspective-friendly rows.
-    private let deskAnchors: [CGPoint] = [
-        CGPoint(x: 0.17, y: 0.55),
-        CGPoint(x: 0.50, y: 0.53),
-        CGPoint(x: 0.82, y: 0.55),
-        CGPoint(x: 0.24, y: 0.76),
-        CGPoint(x: 0.52, y: 0.74),
-        CGPoint(x: 0.79, y: 0.76)
+    /// 6 seat anchors (normalised 0…1) arranged in 2 rows of 3
+    private let seatAnchors: [CGPoint] = [
+        CGPoint(x: 0.16, y: 0.30),
+        CGPoint(x: 0.45, y: 0.28),
+        CGPoint(x: 0.75, y: 0.32),
+        CGPoint(x: 0.24, y: 0.72),
+        CGPoint(x: 0.56, y: 0.68),
+        CGPoint(x: 0.83, y: 0.72)
     ]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 10.0)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 8.0)) { timeline in
             GeometryReader { proxy in
                 let size = proxy.size
                 let time = timeline.date.timeIntervalSinceReferenceDate
 
                 ZStack(alignment: .topLeading) {
-                    // Layer 1: Room background (wall/windows)
-                    backgroundLayer(size: size, time: time)
+                    // Layer 1: Floor base
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(TinyTokens.ColorToken.bgCell)
 
-                    // Layer 2: Floor texture + perspective grid
-                    floorLayer(size: size, time: time)
+                    // Layer 2: Subtle grid
+                    OfficeGridPattern()
+                        .stroke(TinyTokens.ColorToken.borderDefault.opacity(0.18), lineWidth: 0.5)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                    // Layer 3: Furniture & room props
+                    // Layer 3: Furniture (desks, optional plant/server)
                     furnitureLayer(size: size)
-                    wallDecorLayer(size: size)
 
-                    // Layer 4: Animated employees and aisle movement
+                    // Layer 4: Animated employees
                     employeesLayer(size: size, time: time)
-                    roamingEmployeeLayer(size: size, time: time)
 
                     // Layer 5: Risk atmosphere wash (danger pulses)
                     atmosphereLayer(time: time)
@@ -388,80 +389,11 @@ private struct AnimatedOfficeScene: View {
                         .stroke(sceneBorderColor, lineWidth: 1)
                 )
             }
-            .frame(height: 220)
+            .frame(height: 200)
         }
     }
 
     // MARK: Layers
-
-    @ViewBuilder
-    private func backgroundLayer(size: CGSize, time: TimeInterval) -> some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        TinyTokens.ColorToken.bgPopover.opacity(0.96),
-                        TinyTokens.ColorToken.bgCell.opacity(0.92)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-
-        // Wall split to create room depth.
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        TinyTokens.ColorToken.borderDefault.opacity(0.22),
-                        .clear
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .frame(height: size.height * 0.52)
-
-        // Window strips for a "lively office" feeling.
-        HStack(spacing: 10) {
-            windowPane(width: size.width * 0.24, height: size.height * 0.26, time: time, phase: 0.0)
-            windowPane(width: size.width * 0.24, height: size.height * 0.26, time: time, phase: 0.8)
-            windowPane(width: size.width * 0.24, height: size.height * 0.26, time: time, phase: 1.6)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 14)
-    }
-
-    @ViewBuilder
-    private func floorLayer(size: CGSize, time: TimeInterval) -> some View {
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        TinyTokens.ColorToken.bgCell.opacity(0.20),
-                        TinyTokens.ColorToken.bgCell.opacity(0.88)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .frame(height: size.height * 0.56)
-            .position(x: size.width / 2, y: size.height * 0.74)
-
-        if let texture = TinyAsset.choiceTexture() {
-            texture
-                .resizable(resizingMode: .tile)
-                .interpolation(.none)
-                .opacity(0.08)
-                .frame(width: size.width, height: size.height * 0.56)
-                .position(x: size.width / 2, y: size.height * 0.74)
-        }
-
-        OfficeGridPattern()
-            .stroke(TinyTokens.ColorToken.borderDefault.opacity(0.14), lineWidth: 0.5)
-            .scaleEffect(x: 1.0, y: 0.82, anchor: .bottom)
-            .offset(y: size.height * 0.09)
-    }
 
     private func atmosphereLayer(time: TimeInterval) -> some View {
         let pulse: Double = sceneState.riskLevel == .danger
@@ -479,54 +411,29 @@ private struct AnimatedOfficeScene: View {
 
     @ViewBuilder
     private func furnitureLayer(size: CGSize) -> some View {
-        // Desks — dimmed beyond the active seat count to hint at future growth.
-        ForEach(Array(deskAnchors.enumerated()), id: \.offset) { index, anchor in
+        // Desks — dimmed beyond the active seat count to hint at future growth
+        ForEach(Array(seatAnchors.enumerated()), id: \.offset) { index, anchor in
             let pos = point(anchor: anchor, in: size)
             let active = index < sceneState.activeEmployeeCount
-            deskSprite(index: index, at: pos)
+            Group {
+                deskSprite(at: pos)
+            }
             .opacity(active ? 1.0 : 0.22)
         }
 
-        // Stage-aware decorative furniture.
+        // Conditional decorative furniture
         if sceneState.showPlant {
-            sprite(name: "office_plant_01", width: 30, height: 36)
+            sprite(name: "office_plant_01", width: 24, height: 32)
                 .position(x: size.width * 0.08, y: size.height * 0.76)
-            sprite(name: "office_plant_01", width: 24, height: 30)
-                .position(x: size.width * 0.92, y: size.height * 0.49)
         }
         if sceneState.showDesk2 {
-            sprite(name: "office_desk_02", width: 38, height: 34)
-                .position(x: size.width * 0.90, y: size.height * 0.72)
+            sprite(name: "office_desk_02", width: 30, height: 30)
+                .position(x: size.width * 0.72, y: size.height * 0.74)
         }
         if sceneState.showServer {
-            sprite(name: "office_server_01", width: 28, height: 44)
-                .position(x: size.width * 0.06, y: size.height * 0.64)
+            sprite(name: "office_server_01", width: 24, height: 40)
+                .position(x: size.width * 0.92, y: size.height * 0.68)
         }
-    }
-
-    @ViewBuilder
-    private func wallDecorLayer(size: CGSize) -> some View {
-        let icons: [(String, String)] = [
-            ("cat_strategy_icon", "target"),
-            ("cat_product_icon", "shippingbox.fill"),
-            ("cat_sales_icon", "chart.line.uptrend.xyaxis"),
-            ("cat_ai_icon", "sparkles")
-        ]
-        HStack(spacing: 12) {
-            ForEach(Array(icons.enumerated()), id: \.offset) { _, item in
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(.black.opacity(0.16))
-                    .frame(width: 28, height: 28)
-                    .overlay {
-                        TinyAsset.icon(assetName: item.0, sfSymbol: item.1)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.82))
-                    }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 10)
-        .padding(.top, 12)
     }
 
     @ViewBuilder
@@ -538,10 +445,9 @@ private struct AnimatedOfficeScene: View {
 
         ForEach(0..<sceneState.activeEmployeeCount, id: \.self) { index in
             let kind: EmployeeKind = index == 0 ? .founder : (index % 2 == 0 ? .pm : .dev)
-            let desk = point(anchor: deskAnchors[index % deskAnchors.count], in: size)
-            let base = CGPoint(x: desk.x, y: desk.y - 20)
-            let dx = CGFloat(sin(time * 1.0 * speed + Double(index) * 0.7)) * amp
-            let dy = CGFloat(cos(time * 1.4 * speed + Double(index) * 0.5)) * (amp * 0.4)
+            let base = point(anchor: seatAnchors[index % seatAnchors.count], in: size)
+            let dx = CGFloat(sin(time * 1.2 * speed + Double(index))) * amp
+            let dy = CGFloat(cos(time * 1.5 * speed + Double(index) * 0.7)) * (amp * 0.5) - 10
             let animPos = CGPoint(x: base.x + dx, y: base.y + dy)
 
             employeeSprite(kind: kind)
@@ -552,23 +458,6 @@ private struct AnimatedOfficeScene: View {
                     }
                 }
                 .position(animPos)
-        }
-    }
-
-    @ViewBuilder
-    private func roamingEmployeeLayer(size: CGSize, time: TimeInterval) -> some View {
-        if sceneState.activeEmployeeCount >= 3 {
-            let profile = sceneState.motionProfile
-            let speed = speedMultiplier(for: profile)
-            let progress = 0.5 + 0.5 * sin(time * 0.36 * speed)
-            let x = size.width * (0.13 + progress * 0.74)
-            let y = size.height * (0.66 + 0.02 * sin(time * 1.6))
-            let facingRight = cos(time * 0.36 * speed) >= 0
-
-            employeeSprite(kind: .dev)
-                .scaleEffect(x: facingRight ? 1 : -1, y: 1, anchor: .center)
-                .opacity(0.62)
-                .position(x: x, y: y)
         }
     }
 
@@ -592,27 +481,20 @@ private struct AnimatedOfficeScene: View {
     }
 
     @ViewBuilder
-    private func deskSprite(index: Int, at p: CGPoint) -> some View {
-        let deskAsset = index % 2 == 0 ? "office_desk_01" : "office_desk_02"
-
-        Ellipse()
-            .fill(.black.opacity(0.18))
-            .frame(width: 44, height: 12)
-            .position(x: p.x, y: p.y + 12)
-
-        if let desk = TinyAsset.officeSprite(named: deskAsset) {
+    private func deskSprite(at p: CGPoint) -> some View {
+        if let desk = TinyAsset.officeSprite(named: "office_desk_01") {
             desk
                 .resizable()
                 .interpolation(.none)
-                .frame(width: 38, height: 32)
+                .frame(width: 30, height: 30)
                 .position(p)
         }
         if let monitor = TinyAsset.officeSprite(named: "office_monitor_01") {
             monitor
                 .resizable()
                 .interpolation(.none)
-                .frame(width: 18, height: 16)
-                .position(CGPoint(x: p.x + 3, y: p.y - 7))
+                .frame(width: 22, height: 22)
+                .position(CGPoint(x: p.x + 10, y: p.y - 10))
         }
     }
 
@@ -633,34 +515,14 @@ private struct AnimatedOfficeScene: View {
             image
                 .resizable()
                 .interpolation(.none)
-                .frame(width: 22, height: 28)
+                .frame(width: 20, height: 28)
                 .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
         } else {
             Image(systemName: "person.fill")
                 .font(.system(size: 14))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
-                .frame(width: 22, height: 28)
+                .frame(width: 20, height: 28)
         }
-    }
-
-    private func windowPane(width: CGFloat, height: CGFloat, time: TimeInterval, phase: Double) -> some View {
-        let glow = 0.30 + 0.12 * abs(sin(time * 0.45 + phase))
-        return RoundedRectangle(cornerRadius: 5)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.24, green: 0.58, blue: 0.95).opacity(0.56 + glow * 0.35),
-                        Color(red: 0.18, green: 0.36, blue: 0.62).opacity(0.40 + glow * 0.30)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 5)
-                    .stroke(.white.opacity(0.22), lineWidth: 0.6)
-            )
-            .frame(width: width, height: height)
     }
 
     // MARK: Helpers
@@ -681,17 +543,17 @@ private struct AnimatedOfficeScene: View {
         switch profile {
         case .calm:   return 0.85
         case .steady: return 1.0
-        case .busy:   return 1.25
-        case .urgent: return 1.55
+        case .busy:   return 1.2
+        case .urgent: return 1.45
         }
     }
 
     private func amplitude(for profile: OfficeMotionProfile) -> CGFloat {
         switch profile {
-        case .calm:   return 1.4
-        case .steady: return 2.0
-        case .busy:   return 2.8
-        case .urgent: return 3.4
+        case .calm:   return 2.0
+        case .steady: return 3.0
+        case .busy:   return 4.2
+        case .urgent: return 5.2
         }
     }
 
