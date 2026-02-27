@@ -22,6 +22,14 @@
 - UI連携ViewState: `SimulationEngine.makeViewState(state:)`（Runway/Inbox FULL判定を含む）
 - メニューバーUI（v0.1実装フェーズ）: `swift run tinyceo-app`
 
+## 実運用時の保存先（Dropbox外）
+- `tinyceo-app` のセーブ/イベントDBは `~/Library/Application Support/TinyCEO/tinyceo.sqlite` に保存されます。
+- このため、開発ディレクトリ（Dropbox配下）とは分離して運用できます。
+- `tinyceo-app` は起動時に `data/*.json` を優先順で読み込みます:
+  1. `TINYCEO_DATA_DIR`（指定時）
+  2. アプリ同梱リソース（`Resources/Data`）
+  3. カレントディレクトリから親方向に探索した `data/`
+
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）

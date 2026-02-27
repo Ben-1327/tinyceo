@@ -12,7 +12,7 @@ enum TinyAsset {
             return Image(nsImage: image).renderingMode(.template)
         }
 
-        print("[TinyAsset] fallback: \(assetName)")
+        print("[TinyAsset] fallback: \(assetName) -> \(sfSymbol)")
         return Image(systemName: sfSymbol)
     }
 

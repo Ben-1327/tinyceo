@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "disciplines": [
+    "DEV",
+    "DESIGN",
+    "SALES",
+    "OPS",
+    "PM",
+    "CS",
+    "RESEARCH"
+  ],
+  "roles": [
+    {
+      "id": "ROLE_FOUNDER",
+      "name": "Founder",
+      "monthlySalaryJPY": 0,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "DEV": 0,
+        "DESIGN": 0,
+        "SALES": 0,
+        "OPS": 0,
+        "PM": 0,
+        "CS": 0,
+        "RESEARCH": 0
+      }
+    },
+    {
+      "id": "ROLE_ENGINEER_JR",
+      "name": "Engineer (Jr)",
+      "monthlySalaryJPY": 550000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "DEV": 6,
+        "RESEARCH": 1
+      }
+    },
+    {
+      "id": "ROLE_ENGINEER_MD",
+      "name": "Engineer (Mid)",
+      "monthlySalaryJPY": 750000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "DEV": 8,
+        "RESEARCH": 1
+      }
+    },
+    {
+      "id": "ROLE_DESIGNER",
+      "name": "Designer",
+      "monthlySalaryJPY": 600000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "DESIGN": 6,
+        "RESEARCH": 1
+      }
+    },
+    {
+      "id": "ROLE_SALES",
+      "name": "Sales",
+      "monthlySalaryJPY": 650000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "SALES": 5
+      }
+    },
+    {
+      "id": "ROLE_OPS",
+      "name": "Ops",
+      "monthlySalaryJPY": 650000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "OPS": 6,
+        "PM": 1
+      }
+    },
+    {
+      "id": "ROLE_PM",
+      "name": "PM",
+      "monthlySalaryJPY": 800000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "PM": 6
+      }
+    },
+    {
+      "id": "ROLE_SUPPORT",
+      "name": "Support",
+      "monthlySalaryJPY": 550000,
+      "baseOutputWorkUnitsPerCompanyDay": {
+        "CS": 5
+      }
+    }
+  ]
+}

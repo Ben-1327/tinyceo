@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "id": "PRJ_CONTRACT_SLACK_BOT",
+      "type": "CONTRACT",
+      "name": "Slack Bot Automation",
+      "workRequired": {
+        "DEV": 28,
+        "PM": 10,
+        "OPS": 6
+      },
+      "reward": {
+        "cashJPY": 180000,
+        "reputation": 2,
+        "techDebt": 3
+      }
+    },
+    {
+      "id": "PRJ_CONTRACT_DASHBOARD",
+      "type": "CONTRACT",
+      "name": "KPI Dashboard (Sheets→BI)",
+      "workRequired": {
+        "DEV": 20,
+        "OPS": 18,
+        "PM": 8
+      },
+      "reward": {
+        "cashJPY": 220000,
+        "reputation": 2,
+        "techDebt": 2
+      }
+    },
+    {
+      "id": "PRJ_CONTRACT_MIGRATION",
+      "type": "CONTRACT",
+      "name": "Data Migration (CSV Hell)",
+      "workRequired": {
+        "DEV": 18,
+        "OPS": 22,
+        "PM": 10
+      },
+      "reward": {
+        "cashJPY": 260000,
+        "reputation": 1,
+        "techDebt": 4
+      }
+    },
+    {
+      "id": "PRJ_PRODUCT_MVP",
+      "type": "PRODUCT",
+      "name": "SaaS MVP (Internal Tool)",
+      "workRequired": {
+        "DEV": 60,
+        "DESIGN": 18,
+        "PM": 18,
+        "OPS": 10,
+        "CS": 6
+      },
+      "reward": {
+        "mrrJPY": 30000,
+        "reputation": 3,
+        "techDebt": 3
+      }
+    },
+    {
+      "id": "PRJ_PRODUCT_FEATURE_EXPORT",
+      "type": "PRODUCT",
+      "name": "Feature: Export & API",
+      "workRequired": {
+        "DEV": 28,
+        "PM": 8,
+        "OPS": 6,
+        "CS": 4
+      },
+      "reward": {
+        "mrrJPY": 12000,
+        "reputation": 1,
+        "techDebt": 2
+      }
+    },
+    {
+      "id": "PRJ_INTERNAL_DOCS",
+      "type": "INTERNAL",
+      "name": "Knowledge Base Setup",
+      "workRequired": {
+        "OPS": 16,
+        "PM": 8,
+        "RESEARCH": 6
+      },
+      "reward": {
+        "unlockPolicyIds": [
+          "POL_ONBOARDING"
+        ],
+        "teamHealth": 3,
+        "techDebt": -2
+      }
+    },
+    {
+      "id": "PRJ_INTERNAL_CICD",
+      "type": "INTERNAL",
+      "name": "CI/CD Setup",
+      "workRequired": {
+        "DEV": 18,
+        "OPS": 10,
+        "PM": 6
+      },
+      "reward": {
+        "unlockPolicyIds": [
+          "POL_CICD"
+        ],
+        "techDebt": -4,
+        "reputation": 1
+      }
+    }
+  ],
+  "generationRules": {
+    "maxActiveProjectsBase": 2,
+    "focusWeightsByStrategy": {
+      "CONTRACT_HEAVY": {
+        "CONTRACT": 0.7,
+        "PRODUCT": 0.2,
+        "INTERNAL": 0.1
+      },
+      "BALANCED": {
+        "CONTRACT": 0.45,
+        "PRODUCT": 0.4,
+        "INTERNAL": 0.15
+      },
+      "PRODUCT_HEAVY": {
+        "CONTRACT": 0.25,
+        "PRODUCT": 0.6,
+        "INTERNAL": 0.15
+      }
+    }
+  }
+}

@@ -18,11 +18,39 @@ enum TinyTokens {
         static let statusWarning = Color.dynamic(light: 0xFF9F0A, dark: 0xFFD60A)
         static let statusDanger = Color.dynamic(light: 0xFF3B30, dark: 0xFF453A)
 
+        static let effectPositive = Color.dynamic(light: 0x25A244, dark: 0x30D158)
+        static let effectNegative = Color.dynamic(light: 0xFF3B30, dark: 0xFF453A)
+
         static let kpiCash = Color.dynamic(light: 0x1C1C1E, dark: 0xF2F0ED)
         static let kpiRunway = Color.dynamic(light: 0x1C1C1E, dark: 0xF2F0ED)
         static let kpiReputation = Color.dynamic(light: 0x5856D6, dark: 0x7D7AFF)
         static let kpiHealth = Color.dynamic(light: 0x25A244, dark: 0x30D158)
         static let kpiTechDebt = Color.dynamic(light: 0xE6780C, dark: 0xFF9F0A)
+
+        static func categoryBadge(_ category: String) -> Color {
+            switch category {
+            case "STRATEGY":
+                return Color.dynamic(light: 0x5856D6, dark: 0x5856D6)
+            case "HIRING":
+                return Color.dynamic(light: 0x30D158, dark: 0x30D158)
+            case "PROCESS":
+                return Color.dynamic(light: 0x636366, dark: 0x636366)
+            case "SALES":
+                return Color.dynamic(light: 0xFF9F0A, dark: 0xFF9F0A)
+            case "PRODUCT":
+                return Color.dynamic(light: 0x007AFF, dark: 0x007AFF)
+            case "FINANCE":
+                return Color.dynamic(light: 0xFF453A, dark: 0xFF453A)
+            case "CRISIS":
+                return Color.dynamic(light: 0xFF453A, dark: 0xFF453A)
+            case "CULTURE":
+                return Color.dynamic(light: 0xFF6B6B, dark: 0xFF6B6B)
+            case "AI":
+                return Color.dynamic(light: 0xBF5AF2, dark: 0xBF5AF2)
+            default:
+                return Color.dynamic(light: 0x636366, dark: 0x636366)
+            }
+        }
     }
 
     enum Size {

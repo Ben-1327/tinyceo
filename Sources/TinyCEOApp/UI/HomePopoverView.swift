@@ -14,59 +14,46 @@ struct HomePopoverView: View {
     }()
 
     var body: some View {
-        ZStack {
-            TinyTokens.ColorToken.bgPopover
-            content
-        }
-        .frame(minWidth: TinyTokens.Size.popoverMinWidth, maxWidth: TinyTokens.Size.popoverWidth)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        if let runtimeError = store.runtimeError {
-            VStack(spacing: 12) {
-                Text("TinyCEO")
-                    .font(.system(size: 15, weight: .medium))
-                Text(runtimeError)
-                    .font(.system(size: 12))
-                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 16)
-                Button("Retry") {
-                    store.start()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                if let crisis = store.crisisBannerText {
+                    CrisisBanner(text: crisis)
+                }
+                kpiSection
+                projectSection
+                inboxSection
+                if store.showOfficeDecorations {
+                    OfficeDecorationRow(snapshot: store.snapshot)
                 }
             }
-            .padding(16)
-        } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    header
-                    kpiSection
-                    inboxSection
-                    if store.showOfficeDecorations {
-                        OfficeDecorationRow(snapshot: store.snapshot)
-                    }
-                    settingsSection
-                    choicePreview
-                    debugActions
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-            }
-            .scrollIndicators(.never)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
+        .scrollIndicators(.never)
+        .background(TinyTokens.ColorToken.bgPopover)
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 8) {
+            Image(systemName: "building.2.fill")
+                .font(.system(size: 14))
             Text("TinyCEO")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
             Spacer()
             Text("Day \(store.viewState.day)")
-                .font(.system(size: 12, weight: .regular))
+                .font(.system(size: 12))
                 .foregroundStyle(TinyTokens.ColorToken.textSecondary)
             RiskBadge(level: store.viewState.riskLevel)
+            Button {
+                store.openSettings()
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 15))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(TinyTokens.ColorToken.textSecondary)
         }
     }
 
@@ -85,31 +72,31 @@ struct HomePopoverView: View {
         }
     }
 
-    private var inboxSection: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: store.viewState.showInboxFullBanner ? "tray.full.fill" : "tray.fill")
-                    .font(.system(size: 14))
-                Text("Inbox \(store.viewState.inboxCount)/\(store.viewState.maxInboxCards)")
-                    .font(.system(size: 13, weight: .medium))
-                Spacer()
-                if store.viewState.showInboxFullBanner {
-                    Text("FULL")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(TinyTokens.ColorToken.statusDanger)
-                        .clipShape(Capsule())
+    private var projectSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("プロジェクト")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+
+            if store.projectRows.isEmpty {
+                Text("進行中のプロジェクトはありません")
+                    .font(.system(size: 12))
+                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+            } else {
+                ForEach(store.projectRows) { row in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(row.title)
+                            .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
+                            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                        ProgressView(value: row.progress)
+                            .tint(TinyTokens.ColorToken.statusHealthy)
+                        Text("\(Int(row.progress * 100))%")
+                            .font(.system(size: 11))
+                            .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+                    }
                 }
             }
-            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
-
-            Text("Next card in \(store.viewState.minutesUntilNextCard)m")
-                .font(.system(size: 12))
-                .monospacedDigit()
-                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
         .background(TinyTokens.ColorToken.bgCell)
@@ -120,62 +107,44 @@ struct HomePopoverView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    private var settingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle(
-                "作業連携",
-                isOn: Binding(
-                    get: { store.snapshot?.isWorkIntegrationEnabled ?? true },
-                    set: { store.setWorkIntegrationEnabled($0) }
-                )
-            )
-            Toggle("通知", isOn: $store.notificationsEnabled)
-            Toggle("Choice Texture (default: OFF)", isOn: $store.showChoiceTexture)
-        }
-        .toggleStyle(.switch)
-        .font(.system(size: 11))
-    }
-
-    private var choicePreview: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(TinyTokens.ColorToken.bgCell)
-            if store.showChoiceTexture, let texture = TinyAsset.choiceTexture() {
-                texture
-                    .resizable()
-                    .scaledToFill()
-                    .opacity(0.1)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+    private var inboxSection: some View {
+        HStack(spacing: 8) {
+            Image(systemName: store.viewState.showInboxFullBanner ? "tray.full.fill" : "tray.fill")
+                .font(.system(size: 14))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text("Inbox \(store.viewState.inboxCount)件")
+                        .font(.system(size: 13, weight: .medium))
+                    if store.viewState.showInboxFullBanner {
+                        Text("FULL")
+                            .font(.system(size: 10, weight: .semibold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .foregroundStyle(.white)
+                            .background(TinyTokens.ColorToken.statusDanger)
+                            .clipShape(Capsule())
+                    }
+                }
+                Text("次のカードまで: 約\(store.viewState.minutesUntilNextCard)分")
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
             }
-            HStack {
-                Text("A")
-                    .font(.system(size: 16, weight: .medium, design: .monospaced))
-                Text("Choice preview")
-                    .font(.system(size: 13, weight: .medium))
+            Spacer()
+            Button("カードを見る") {
+                store.openInbox()
             }
-            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+            .buttonStyle(.borderedProminent)
+            .font(.system(size: 12, weight: .medium))
         }
-        .frame(height: 56)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(TinyTokens.ColorToken.bgCell)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
         )
-    }
-
-    private var debugActions: some View {
-        HStack(spacing: 8) {
-            Button("Tick +1m") {
-                store.tickOneRealMinute()
-            }
-            .buttonStyle(.borderedProminent)
-
-            Button("Resolve Card") {
-                store.resolveNextCard()
-            }
-            .buttonStyle(.bordered)
-            .disabled(!store.canResolveNextCard)
-        }
-        .font(.system(size: 12, weight: .medium))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var kpiModels: [KPIModel] {
@@ -219,7 +188,7 @@ struct HomePopoverView: View {
             ),
             KPIModel(
                 id: "techDebt",
-                label: "TECHDEBT",
+                label: "DEBT",
                 valueText: "\(Int(state.techDebt.rounded()))",
                 assetName: "ui_techdebt_icon",
                 fallbackSymbol: "bolt.fill",
@@ -361,6 +330,30 @@ private struct RiskBadge: View {
         case .danger:
             return TinyTokens.ColorToken.statusDanger
         }
+    }
+}
+
+private struct CrisisBanner: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13))
+            Text(text)
+                .font(.system(size: 13))
+                .lineLimit(2)
+        }
+        .foregroundStyle(TinyTokens.ColorToken.statusDanger)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TinyTokens.ColorToken.bgDanger)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(TinyTokens.ColorToken.borderDanger, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

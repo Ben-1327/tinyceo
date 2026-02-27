@@ -29,7 +29,8 @@ let package = Package(
             name: "TinyCEOApp",
             dependencies: ["TinyCEOCore"],
             resources: [
-                .process("Resources/Assets.xcassets")
+                .process("Resources/Assets.xcassets"),
+                .process("Resources/Data")
             ]
         ),
         .testTarget(

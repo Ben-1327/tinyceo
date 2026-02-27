@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "modes": [
+    "FOCUS",
+    "RESEARCH",
+    "BREAK"
+  ],
+  "defaultMode": "FOCUS",
+  "appCategoryRules": [
+    {
+      "match": "bundleId",
+      "pattern": "com.tinyspeck.slackmacgap",
+      "category": "COMMS"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.hnc.Discord",
+      "category": "COMMS"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.microsoft.Excel",
+      "category": "OPS"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.apple.iWork.Numbers",
+      "category": "OPS"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.google.Chrome",
+      "category": "RESEARCH"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.apple.Safari",
+      "category": "RESEARCH"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.microsoft.VSCode",
+      "category": "DEV"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.jetbrains.*",
+      "category": "DEV"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.apple.dt.Xcode",
+      "category": "DEV"
+    },
+    {
+      "match": "bundleId",
+      "pattern": "com.apple.Terminal",
+      "category": "DEV"
+    },
+    {
+      "match": "processName",
+      "pattern": "claude",
+      "category": "AI"
+    },
+    {
+      "match": "processName",
+      "pattern": "codex",
+      "category": "AI"
+    }
+  ],
+  "browserDomainOverrides": [
+    {
+      "domain": "chatgpt.com",
+      "modeToCategory": {
+        "FOCUS": "AI",
+        "RESEARCH": "AI",
+        "BREAK": "AI"
+      }
+    },
+    {
+      "domain": "claude.ai",
+      "modeToCategory": {
+        "FOCUS": "AI",
+        "RESEARCH": "AI",
+        "BREAK": "AI"
+      }
+    },
+    {
+      "domain": "youtube.com",
+      "modeToCategory": {
+        "FOCUS": "BREAK",
+        "RESEARCH": "RESEARCH",
+        "BREAK": "BREAK"
+      }
+    },
+    {
+      "domain": "x.com",
+      "modeToCategory": {
+        "FOCUS": "BREAK",
+        "RESEARCH": "RESEARCH",
+        "BREAK": "BREAK"
+      }
+    },
+    {
+      "domain": "twitter.com",
+      "modeToCategory": {
+        "FOCUS": "BREAK",
+        "RESEARCH": "RESEARCH",
+        "BREAK": "BREAK"
+      }
+    }
+  ],
+  "notes": "実装では appCategoryRules を上から順に評価し、最初にマッチしたカテゴリを採用。ブラウザはドメインが取れる場合のみ overrides を適用。"
+}

@@ -28,7 +28,7 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate {
         popover.animates = true
         popover.contentSize = NSSize(width: TinyTokens.Size.popoverWidth, height: 420)
         popover.contentViewController = NSHostingController(
-            rootView: HomePopoverView(store: store)
+            rootView: PopoverRootView(store: store)
                 .frame(minWidth: TinyTokens.Size.popoverMinWidth)
                 .frame(width: TinyTokens.Size.popoverWidth)
         )
@@ -60,6 +60,12 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate {
                 } else {
                     button.toolTip = "TinyCEO"
                 }
+            }
+            .store(in: &cancellables)
+
+        store.$requiresStickyPopover
+            .sink { [weak self] requiresSticky in
+                self?.popover.behavior = requiresSticky ? .semitransient : .transient
             }
             .store(in: &cancellables)
     }
