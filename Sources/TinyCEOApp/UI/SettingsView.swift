@@ -72,21 +72,10 @@ struct SettingsView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Button {
+            BackNavigationButton {
                 store.backFromSettings()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14))
-                    Text("戻る")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+
             Text("設定")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)

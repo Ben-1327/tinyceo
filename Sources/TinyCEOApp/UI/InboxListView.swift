@@ -55,13 +55,9 @@ struct InboxListView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Button {
+            BackNavigationButton {
                 store.openHome()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14))
             }
-            .buttonStyle(.plain)
 
             Text("Inbox")
                 .font(.system(size: 15, weight: .medium))
@@ -101,29 +97,40 @@ private struct InboxCardRow: View {
     let card: InboxDisplayCard
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                CategoryBadgeView(category: card.category)
-                if card.isCrisis {
-                    Text("緊急")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(TinyTokens.ColorToken.statusDanger)
-                        .clipShape(Capsule())
+        HStack(alignment: .top, spacing: 10) {
+            TinyAsset.icon(
+                assetName: EventVisualCatalog.spec(for: card.category).iconAssetName,
+                sfSymbol: EventVisualCatalog.spec(for: card.category).fallbackSymbol
+            )
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(TinyTokens.ColorToken.categoryBadge(card.category))
+            .frame(width: 20, height: 20)
+            .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    CategoryBadgeView(category: card.category)
+                    if card.isCrisis {
+                        Text("緊急")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(TinyTokens.ColorToken.statusDanger)
+                            .clipShape(Capsule())
+                    }
+                    Spacer()
                 }
-                Spacer()
+
+                Text(card.title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                    .lineLimit(2)
+
+                Text("\(card.optionCount)択")
+                    .font(.system(size: 11))
+                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
             }
-
-            Text(card.title)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(TinyTokens.ColorToken.textPrimary)
-                .lineLimit(2)
-
-            Text("\(card.optionCount)択")
-                .font(.system(size: 11))
-                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)

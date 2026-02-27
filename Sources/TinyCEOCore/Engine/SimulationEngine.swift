@@ -25,6 +25,8 @@ public struct SimulationEngine: Sendable {
     }
 
     public func ensureOnStartCard(state: inout GameState, rng: inout SeededGenerator) {
+        ensureCardCadenceInitialized(state: &state, rng: &rng)
+
         if state.flags[SystemFlagKeys.onStartCardGenerated]?.boolValue == true {
             return
         }
@@ -78,8 +80,9 @@ public struct SimulationEngine: Sendable {
             state.companyMinutes = state.companyMinutes % 1440
         }
 
-        while state.activeRealMinutesSinceCard >= data.balance.time.ceoCardIntervalRealMinutes {
-            state.activeRealMinutesSinceCard -= data.balance.time.ceoCardIntervalRealMinutes
+        let interval = currentCardCadenceMinutes(state: state)
+        while state.activeRealMinutesSinceCard >= interval {
+            state.activeRealMinutesSinceCard = 0
             state.cycle += 1
 
             if let card = deckEngine.maybeGenerateCycleCard(state: &state, data: data, rng: &rng) {
@@ -90,6 +93,8 @@ public struct SimulationEngine: Sendable {
                 result.resolvedCardID = resolved.id
                 result.logs.append("resolved=\(resolved.id)")
             }
+
+            state.nextCardIntervalRealMinutes = sampleNextCardCadenceMinutes(state: state, rng: &rng)
         }
 
         clearInboxOverflowFlagIfRecovered(state: &state)
@@ -522,6 +527,45 @@ public struct SimulationEngine: Sendable {
             }
         }
         return value
+    }
+
+    private func ensureCardCadenceInitialized(state: inout GameState, rng: inout SeededGenerator) {
+        if state.nextCardIntervalRealMinutes != nil {
+            return
+        }
+        state.nextCardIntervalRealMinutes = sampleNextCardCadenceMinutes(state: state, rng: &rng)
+    }
+
+    private func currentCardCadenceMinutes(state: GameState) -> Int {
+        let fallback = data.balance.time.ceoCardIntervalRealMinutes
+        return max(20, state.nextCardIntervalRealMinutes ?? fallback)
+    }
+
+    private func sampleNextCardCadenceMinutes(state: GameState, rng: inout SeededGenerator) -> Int {
+        let range = cadenceRange(forActiveMinutes: state.activeRealMinutes)
+        let span = range.upperBound - range.lowerBound + 1
+        let sampled = range.lowerBound + Int(rng.nextUInt64() % UInt64(span))
+
+        let inboxAdjustment = max(0, state.inbox.count - 1) * 12
+        let riskAdjustment: Int
+        if state.metrics.cashJPY <= 120_000 || state.metrics.teamHealth <= 40 || state.metrics.techDebt >= 45 {
+            riskAdjustment = -10
+        } else {
+            riskAdjustment = 0
+        }
+
+        return max(20, sampled + inboxAdjustment + riskAdjustment)
+    }
+
+    private func cadenceRange(forActiveMinutes activeMinutes: Int) -> ClosedRange<Int> {
+        switch activeMinutes {
+        case ..<180:
+            return 30...70
+        case ..<480:
+            return 55...105
+        default:
+            return 80...160
+        }
     }
 
     private func clearInboxOverflowFlagIfRecovered(state: inout GameState) {

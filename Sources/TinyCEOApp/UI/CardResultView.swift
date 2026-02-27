@@ -15,13 +15,10 @@ struct CardResultView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Button {
+                BackNavigationButton {
                     store.openHome()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14))
                 }
-                .buttonStyle(.plain)
+
                 Text("完了")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(TinyTokens.ColorToken.textPrimary)
@@ -50,7 +47,7 @@ struct CardResultView: View {
                         } else {
                             ForEach(result.metricDeltas) { delta in
                                 HStack(spacing: 8) {
-                                    Image(systemName: delta.sfSymbol)
+                                    metricIcon(for: delta)
                                         .font(.system(size: 13))
                                         .frame(width: 18)
                                     Text(delta.label)
@@ -108,6 +105,21 @@ struct CardResultView: View {
             let value = Int(delta.delta.rounded())
             let rendered = Self.currencyFormatter.string(from: NSNumber(value: value)) ?? "¥\(value)"
             return value >= 0 ? "+\(rendered)" : rendered
+        }
+    }
+
+    private func metricIcon(for delta: MetricDelta) -> Image {
+        switch delta.id {
+        case "cash":
+            return TinyAsset.icon(assetName: "ui_cash_icon", sfSymbol: delta.sfSymbol)
+        case "reputation":
+            return TinyAsset.icon(assetName: "ui_reputation_icon", sfSymbol: delta.sfSymbol)
+        case "teamHealth":
+            return TinyAsset.icon(assetName: "ui_health_icon", sfSymbol: delta.sfSymbol)
+        case "techDebt":
+            return TinyAsset.icon(assetName: "ui_techdebt_icon", sfSymbol: delta.sfSymbol)
+        default:
+            return Image(systemName: delta.sfSymbol)
         }
     }
 }

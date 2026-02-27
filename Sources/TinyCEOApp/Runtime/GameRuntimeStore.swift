@@ -238,6 +238,10 @@ final class GameRuntimeStore: ObservableObject {
         return !state.inbox.isEmpty
     }
 
+    var focusInboxCategory: String? {
+        inboxCards.first?.category
+    }
+
     var inboxCards: [InboxDisplayCard] {
         guard let state else { return [] }
 
@@ -544,7 +548,7 @@ private extension GameViewState {
         inboxCount: 0,
         maxInboxCards: 3,
         showInboxFullBanner: false,
-        minutesUntilNextCard: 120,
-        cardIntervalRealMinutes: 120
+        minutesUntilNextCard: 70,
+        cardIntervalRealMinutes: 70
     )
 }

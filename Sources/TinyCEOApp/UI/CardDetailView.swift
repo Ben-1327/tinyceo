@@ -20,7 +20,17 @@ struct CardDetailView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    CategoryBadgeView(category: card.category)
+                    HStack(spacing: 8) {
+                        TinyAsset.icon(
+                            assetName: EventVisualCatalog.spec(for: card.category).iconAssetName,
+                            sfSymbol: EventVisualCatalog.spec(for: card.category).fallbackSymbol
+                        )
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(TinyTokens.ColorToken.categoryBadge(card.category))
+                        .frame(width: 20, height: 20)
+
+                        CategoryBadgeView(category: card.category)
+                    }
                     Text(card.title)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(TinyTokens.ColorToken.textPrimary)
@@ -57,13 +67,10 @@ struct CardDetailView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Button {
+            BackNavigationButton {
                 store.backFromCardDetail()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14))
             }
-            .buttonStyle(.plain)
+
             Text("カード詳細")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)

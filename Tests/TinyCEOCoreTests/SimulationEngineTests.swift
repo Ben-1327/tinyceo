@@ -115,3 +115,83 @@ func inboxFullBannerLifecycle() throws {
     #expect(afterResolve.inboxCount == 2)
     #expect(afterResolve.showInboxFullBanner == false)
 }
+
+@Test("card cadence is randomized and front-loaded in opening hours")
+func cardCadenceRandomizedAndFrontLoaded() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 55)
+    var rng = SeededGenerator(seed: 55)
+
+    engine.ensureOnStartCard(state: &state, rng: &rng)
+    let openingInterval = state.nextCardIntervalRealMinutes ?? -1
+    #expect((30...70).contains(openingInterval))
+
+    var generationMinutes: [Int] = []
+    var previousCycle = state.cycle
+    for minute in 1...900 {
+        _ = engine.processRealMinute(state: &state, signal: ActivitySignal(), isSessionActive: true, autoResolveCard: true, rng: &rng)
+        if state.cycle > previousCycle {
+            generationMinutes.append(minute)
+            previousCycle = state.cycle
+        }
+    }
+
+    #expect(generationMinutes.count >= 8)
+
+    let intervals = zip(generationMinutes, generationMinutes.dropFirst()).map { previous, current in
+        current - previous
+    }
+    let openingIntervals = zip(generationMinutes.dropFirst(), intervals)
+        .filter { minute, _ in minute <= 240 }
+        .map(\.1)
+    let lateIntervals = zip(generationMinutes.dropFirst(), intervals)
+        .filter { minute, _ in minute >= 600 }
+        .map(\.1)
+
+    #expect(!openingIntervals.isEmpty)
+    #expect(!lateIntervals.isEmpty)
+
+    let openingAverage = Double(openingIntervals.reduce(0, +)) / Double(openingIntervals.count)
+    let lateAverage = Double(lateIntervals.reduce(0, +)) / Double(lateIntervals.count)
+    #expect(openingAverage < lateAverage)
+}
+
+@Test("opening cards are biased toward bootstrap categories")
+func openingCardsBiasBootstrapCategories() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 91)
+    var rng = SeededGenerator(seed: 91)
+    let cardsByID = Dictionary(uniqueKeysWithValues: data.cards.cards.map { ($0.id, $0) })
+
+    var categoryCount: [String: Int] = [:]
+    for _ in 0..<360 {
+        let result = engine.processRealMinute(
+            state: &state,
+            signal: ActivitySignal(),
+            isSessionActive: true,
+            autoResolveCard: true,
+            rng: &rng
+        )
+        for cardID in result.generatedCardIDs {
+            let category = cardsByID[cardID]?.category ?? "UNKNOWN"
+            categoryCount[category, default: 0] += 1
+        }
+    }
+
+    let bootstrapCount =
+        categoryCount["STRATEGY", default: 0]
+        + categoryCount["SALES", default: 0]
+        + categoryCount["PRODUCT", default: 0]
+        + categoryCount["HIRING", default: 0]
+        + categoryCount["PROCESS", default: 0]
+
+    let advancedCount =
+        categoryCount["AI", default: 0]
+        + categoryCount["CRISIS", default: 0]
+        + categoryCount["INVESTOR", default: 0]
+        + categoryCount["EXIT", default: 0]
+
+    #expect(bootstrapCount > advancedCount)
+}

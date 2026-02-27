@@ -11,4 +11,17 @@ public extension GameState {
     var hasMissedCardGenerationDueToFullInbox: Bool {
         flags[SystemFlagKeys.inboxOverflowedSinceLastRelief]?.boolValue ?? false
     }
+
+    var nextCardIntervalRealMinutes: Int? {
+        get {
+            flags[SystemFlagKeys.nextCardIntervalRealMinutes]?.intValue
+        }
+        set {
+            if let newValue {
+                flags[SystemFlagKeys.nextCardIntervalRealMinutes] = .int(newValue)
+            } else {
+                flags.removeValue(forKey: SystemFlagKeys.nextCardIntervalRealMinutes)
+            }
+        }
+    }
 }

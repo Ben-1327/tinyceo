@@ -4,23 +4,19 @@ struct CategoryBadgeView: View {
     let category: String
 
     var body: some View {
-        Text(displayName)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(TinyTokens.ColorToken.categoryBadge(category))
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-    }
+        let spec = EventVisualCatalog.spec(for: category)
 
-    private var displayName: String {
-        switch category {
-        case "CRISIS":
-            return "⚠ CRISIS"
-        case "AI":
-            return "🤖 AI"
-        default:
-            return category
+        return HStack(spacing: 4) {
+            TinyAsset.icon(assetName: spec.iconAssetName, sfSymbol: spec.fallbackSymbol)
+                .font(.system(size: 10, weight: .semibold))
+            Text(spec.label)
+                .font(.system(size: 10, weight: .semibold))
+                .lineLimit(1)
         }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(TinyTokens.ColorToken.categoryBadge(category))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 }

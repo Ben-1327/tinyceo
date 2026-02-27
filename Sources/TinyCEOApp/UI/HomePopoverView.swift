@@ -91,9 +91,20 @@ struct HomePopoverView: View {
                 StatPill(symbol: "person.3.fill", text: "社員 \(store.snapshot?.teamSize ?? 1)名")
                 StatPill(symbol: "hammer.fill", text: "案件 \(store.projectRows.count)")
                 StatPill(symbol: "tray.fill", text: "Inbox \(store.viewState.inboxCount)")
+                if let focusCategory = store.focusInboxCategory {
+                    let spec = EventVisualCatalog.spec(for: focusCategory)
+                    StatPill(
+                        symbol: spec.fallbackSymbol,
+                        text: spec.label
+                    )
+                }
             }
 
-            AnimatedOfficeScene(snapshot: store.snapshot)
+            AnimatedOfficeScene(
+                snapshot: store.snapshot,
+                focusCategory: store.focusInboxCategory,
+                riskLevel: store.viewState.riskLevel
+            )
 
             Text("会社が成長するほどオフィスがにぎやかになります")
                 .font(.system(size: 11))
@@ -316,6 +327,8 @@ private struct StatPill: View {
 
 private struct AnimatedOfficeScene: View {
     let snapshot: GameState?
+    let focusCategory: String?
+    let riskLevel: RiskLevel
 
     private let seatAnchors: [CGPoint] = [
         CGPoint(x: 0.16, y: 0.30),
@@ -346,14 +359,37 @@ private struct AnimatedOfficeScene: View {
                             .opacity(index < max(employees.count, 2) ? 1 : 0.4)
                     }
 
+                    if showPlant {
+                        sprite(name: "office_plant_01", width: 24, height: 32)
+                            .position(x: size.width * 0.08, y: size.height * 0.76)
+                    }
+
+                    if showDesk2 {
+                        sprite(name: "office_desk_02", width: 30, height: 30)
+                            .position(x: size.width * 0.72, y: size.height * 0.74)
+                    }
+
+                    if showServer {
+                        sprite(name: "office_server_01", width: 24, height: 40)
+                            .position(x: size.width * 0.92, y: size.height * 0.68)
+                    }
+
                     ForEach(Array(employees.enumerated()), id: \.offset) { index, employee in
                         let base = point(anchor: seatAnchors[index % seatAnchors.count], in: size)
+                        let motion = motionProfile(for: employee, focusedCategory: focusCategory)
+                        let speedMultiplier = speedMultiplier(for: motion)
+                        let amplitude = amplitude(for: motion)
                         let animatedPoint = CGPoint(
-                            x: base.x + CGFloat(sin(time * 1.2 + Double(index))) * 4,
-                            y: base.y + CGFloat(cos(time * 1.5 + Double(index) * 0.7)) * 2 - 10
+                            x: base.x + CGFloat(sin(time * 1.2 * speedMultiplier + Double(index))) * amplitude,
+                            y: base.y + CGFloat(cos(time * 1.5 * speedMultiplier + Double(index) * 0.7)) * (amplitude * 0.5) - 10
                         )
                         employeeSprite(kind: employee)
                             .position(animatedPoint)
+                    }
+
+                    if let focusCategory {
+                        EventBeacon(category: focusCategory, riskLevel: riskLevel, time: time)
+                            .position(x: size.width - 18, y: 18)
                     }
                 }
             }
@@ -375,6 +411,25 @@ private struct AnimatedOfficeScene: View {
         CGPoint(x: size.width * anchor.x, y: size.height * anchor.y)
     }
 
+    private var chapter2Unlocked: Bool {
+        (snapshot?.chapterIndex ?? 0) >= 1
+    }
+
+    private var showPlant: Bool {
+        guard let snapshot else { return false }
+        return snapshot.day >= 10 || snapshot.hasProductLaunched
+    }
+
+    private var showDesk2: Bool {
+        guard let snapshot else { return false }
+        return snapshot.teamSize >= 2 || chapter2Unlocked
+    }
+
+    private var showServer: Bool {
+        guard let snapshot else { return false }
+        return chapter2Unlocked || snapshot.metrics.aiXP > 0
+    }
+
     @ViewBuilder
     private func deskSprite(at point: CGPoint) -> some View {
         if let desk = TinyAsset.officeSprite(named: "office_desk_01") {
@@ -390,6 +445,16 @@ private struct AnimatedOfficeScene: View {
                 .interpolation(.none)
                 .frame(width: 22, height: 22)
                 .position(CGPoint(x: point.x + 10, y: point.y - 10))
+        }
+    }
+
+    @ViewBuilder
+    private func sprite(name: String, width: CGFloat, height: CGFloat) -> some View {
+        if let image = TinyAsset.officeSprite(named: name) {
+            image
+                .resizable()
+                .interpolation(.none)
+                .frame(width: width, height: height)
         }
     }
 
@@ -411,6 +476,48 @@ private struct AnimatedOfficeScene: View {
         }
     }
 
+    private func motionProfile(for employee: EmployeeKind, focusedCategory: String?) -> OfficeMotionProfile {
+        if riskLevel == .danger {
+            return .urgent
+        }
+        if let focusedCategory {
+            let focusMotion = EventVisualCatalog.spec(for: focusedCategory).motion
+            if focusMotion == .urgent || focusMotion == .busy {
+                return focusMotion
+            }
+        }
+        if employee == .founder {
+            return .steady
+        }
+        return .calm
+    }
+
+    private func speedMultiplier(for profile: OfficeMotionProfile) -> Double {
+        switch profile {
+        case .calm:
+            return 0.85
+        case .steady:
+            return 1.0
+        case .busy:
+            return 1.2
+        case .urgent:
+            return 1.45
+        }
+    }
+
+    private func amplitude(for profile: OfficeMotionProfile) -> CGFloat {
+        switch profile {
+        case .calm:
+            return 2.0
+        case .steady:
+            return 3.0
+        case .busy:
+            return 4.2
+        case .urgent:
+            return 5.2
+        }
+    }
+
     private func characterAssetName(for kind: EmployeeKind) -> String {
         switch kind {
         case .founder:
@@ -422,10 +529,44 @@ private struct AnimatedOfficeScene: View {
         }
     }
 
-    private enum EmployeeKind {
+    private enum EmployeeKind: Equatable {
         case founder
         case dev
         case pm
+    }
+}
+
+private struct EventBeacon: View {
+    let category: String
+    let riskLevel: RiskLevel
+    let time: TimeInterval
+
+    var body: some View {
+        let spec = EventVisualCatalog.spec(for: category)
+        let bob = CGFloat(sin(time * 2.0)) * 2
+
+        return ZStack {
+            Circle()
+                .fill(TinyTokens.ColorToken.bgPopover.opacity(0.92))
+                .frame(width: 24, height: 24)
+            TinyAsset.icon(assetName: spec.iconAssetName, sfSymbol: spec.fallbackSymbol)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(TinyTokens.ColorToken.categoryBadge(category))
+                .offset(y: bob * 0.2)
+        }
+        .overlay(
+            Circle()
+                .stroke(borderColor, lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 1)
+        .offset(y: bob)
+    }
+
+    private var borderColor: Color {
+        if riskLevel == .danger {
+            return TinyTokens.ColorToken.borderDanger
+        }
+        return TinyTokens.ColorToken.borderDefault
     }
 }
 

@@ -89,7 +89,7 @@ public extension SimulationEngine {
     func makeViewState(state: GameState) -> GameViewState {
         let riskLevel = estimateRiskLevel(state: state)
         let maxInboxCards = data.balance.time.maxInboxCards
-        let cardIntervalRealMinutes = data.balance.time.ceoCardIntervalRealMinutes
+        let cardIntervalRealMinutes = max(20, state.nextCardIntervalRealMinutes ?? data.balance.time.ceoCardIntervalRealMinutes)
 
         let countdown = max(0, cardIntervalRealMinutes - state.activeRealMinutesSinceCard)
         let showInboxFullBanner = state.inbox.count >= maxInboxCards && state.hasMissedCardGenerationDueToFullInbox

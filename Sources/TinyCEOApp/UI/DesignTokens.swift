@@ -47,6 +47,10 @@ enum TinyTokens {
                 return Color.dynamic(light: 0xFF6B6B, dark: 0xFF6B6B)
             case "AI":
                 return Color.dynamic(light: 0xBF5AF2, dark: 0xBF5AF2)
+            case "INVESTOR":
+                return Color.dynamic(light: 0x34C759, dark: 0x34C759)
+            case "EXIT":
+                return Color.dynamic(light: 0xFF375F, dark: 0xFF375F)
             default:
                 return Color.dynamic(light: 0x636366, dark: 0x636366)
             }
