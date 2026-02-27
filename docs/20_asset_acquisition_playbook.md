@@ -82,8 +82,10 @@ Acquired: YYYY-MM-DD
 
 **取得 URL:**
 ```
-https://2dpig.itch.io/pixel-office-asset-pack
+https://2dpig.itch.io/pixel-office
 ```
+> **注:** itch.io のページ URL は `pixel-office`（`assets/licenses/2dpig.txt` に記録済みの正式 URL）。
+> `pixel-office-asset-pack` は旧記載の誤りのため修正。
 
 **取得するもの:**
 - Pixel Office Asset Pack 全体（オフィス机・椅子・PC・植物・会議室タイル）
