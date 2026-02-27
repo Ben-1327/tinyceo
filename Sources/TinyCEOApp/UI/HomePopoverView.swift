@@ -340,7 +340,7 @@ private struct AnimatedOfficeScene: View {
     ]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 12.0)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 8.0)) { timeline in
             GeometryReader { proxy in
                 let size = proxy.size
                 let employees = employeeKinds
