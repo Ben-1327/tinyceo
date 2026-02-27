@@ -12,9 +12,16 @@ struct BackNavigationButton: View {
                     .font(.system(size: 13, weight: .medium))
             }
             .foregroundStyle(TinyTokens.ColorToken.textPrimary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .frame(minWidth: 68, minHeight: 34, alignment: .leading)
             .contentShape(Rectangle())
+            .background(TinyTokens.ColorToken.bgCell)
+            .overlay(
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 7))
         }
         .buttonStyle(.plain)
     }

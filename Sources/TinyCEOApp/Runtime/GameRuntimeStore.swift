@@ -45,8 +45,7 @@ final class GameRuntimeStore: ObservableObject {
     private var state: GameState?
     private var rng: SeededGenerator?
     private var timer: Timer?
-
-    private var minutesSinceLastSave = 0
+    private var lastProcessedMinuteMark: Date?
     private var hasLoadedPreferences = false
 
     private let signalProvider = SystemActivitySignalProvider()
@@ -63,34 +62,34 @@ final class GameRuntimeStore: ObservableObject {
         if engine == nil || state == nil || rng == nil {
             loadInitialState()
         }
+        lastProcessedMinuteMark = Date()
         startTimer()
     }
 
     func stop() {
+        processElapsedActiveMinutes()
         persistSnapshot(eventType: "app.stop")
         timer?.invalidate()
         timer = nil
+        lastProcessedMinuteMark = nil
     }
 
     func tickOneRealMinute() {
         guard var mutableState = state, var mutableRNG = rng, let engine else { return }
 
         let activitySignal: ActivitySignal?
-        let isSessionActive: Bool
 
         if mutableState.isWorkIntegrationEnabled {
             let signal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
             activitySignal = signal
-            isSessionActive = !signal.isIdle
         } else {
             activitySignal = nil
-            isSessionActive = true
         }
 
         let result = engine.processRealMinute(
             state: &mutableState,
             signal: activitySignal,
-            isSessionActive: isSessionActive,
+            isSessionActive: true,
             autoResolveCard: false,
             rng: &mutableRNG
         )
@@ -101,18 +100,17 @@ final class GameRuntimeStore: ObservableObject {
 
         handleNotifications(generatedCardIDs: result.generatedCardIDs)
 
-        minutesSinceLastSave += 1
-        let shouldPersist = result.dayAdvancedBy > 0 || !result.generatedCardIDs.isEmpty || minutesSinceLastSave >= 10
-        if shouldPersist {
-            persistSnapshot(
-                eventType: "tick.persist",
-                payload: [
+        let shouldRecordTickEvent = result.dayAdvancedBy > 0 || !result.generatedCardIDs.isEmpty
+        persistSnapshot(
+            eventType: shouldRecordTickEvent ? "tick.persist" : nil,
+            payload: shouldRecordTickEvent
+                ? [
                     "dayAdvancedBy": String(result.dayAdvancedBy),
                     "generatedCards": String(result.generatedCardIDs.count),
-                    "sessionActive": String(isSessionActive)
+                    "sessionActive": "true"
                 ]
-            )
-        }
+                : [:]
+        )
     }
 
     func setWorkIntegrationEnabled(_ enabled: Bool) {
@@ -334,11 +332,36 @@ final class GameRuntimeStore: ObservableObject {
 
     private func startTimer() {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        let scheduled = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.tickOneRealMinute()
+                self?.processElapsedActiveMinutes()
             }
         }
+        RunLoop.main.add(scheduled, forMode: .common)
+        timer = scheduled
+    }
+
+    private func processElapsedActiveMinutes(now: Date = Date()) {
+        guard let lastProcessedMinuteMark else {
+            lastProcessedMinuteMark = now
+            return
+        }
+
+        let elapsedSeconds = now.timeIntervalSince(lastProcessedMinuteMark)
+        guard elapsedSeconds >= 60 else {
+            return
+        }
+
+        let elapsedMinutes = Int(elapsedSeconds / 60)
+        guard elapsedMinutes > 0 else {
+            return
+        }
+
+        for _ in 0..<elapsedMinutes {
+            tickOneRealMinute()
+        }
+
+        self.lastProcessedMinuteMark = lastProcessedMinuteMark.addingTimeInterval(Double(elapsedMinutes * 60))
     }
 
     private func loadInitialState() {
@@ -348,6 +371,19 @@ final class GameRuntimeStore: ObservableObject {
             let dataDir = try Self.resolveDataDirectory()
             let loader = DataLoader()
             let loadedGameData = try loader.loadAll(from: dataDir)
+            let validationIssues = DataValidator.validate(loadedGameData)
+            guard validationIssues.isEmpty else {
+                throw NSError(
+                    domain: "tinyceo.app",
+                    code: 3,
+                    userInfo: [
+                        NSLocalizedDescriptionKey: """
+                        data validation failed:
+                        \(Self.renderValidationSummary(validationIssues))
+                        """
+                    ]
+                )
+            }
 
             gameData = loadedGameData
             cardsByID = Dictionary(uniqueKeysWithValues: loadedGameData.cards.cards.map { ($0.id, $0) })
@@ -460,7 +496,6 @@ final class GameRuntimeStore: ObservableObject {
             if let eventType {
                 try repository.appendEvent(type: eventType, payload: payload)
             }
-            minutesSinceLastSave = 0
         } catch {
             runtimeError = error.localizedDescription
         }
@@ -502,9 +537,14 @@ final class GameRuntimeStore: ObservableObject {
             }
         }
 
-        if let bundledData = Bundle.module.resourceURL?.appendingPathComponent("Data", isDirectory: true),
-           fileManager.fileExists(atPath: bundledData.appendingPathComponent("balance.json").path) {
-            return bundledData
+        if let bundledRoot = Bundle.module.resourceURL,
+           fileManager.fileExists(atPath: bundledRoot.appendingPathComponent("balance.json").path) {
+            return bundledRoot
+        }
+
+        if let bundledDataDir = Bundle.module.resourceURL?.appendingPathComponent("Data", isDirectory: true),
+           fileManager.fileExists(atPath: bundledDataDir.appendingPathComponent("balance.json").path) {
+            return bundledDataDir
         }
 
         var currentDirectory = URL(fileURLWithPath: fileManager.currentDirectoryPath, isDirectory: true)
@@ -521,6 +561,17 @@ final class GameRuntimeStore: ObservableObject {
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "data directory not found. Set TINYCEO_DATA_DIR."]
         )
+    }
+
+    private static func renderValidationSummary(_ issues: [ValidationIssue], maxItems: Int = 6) -> String {
+        let lines = issues.prefix(maxItems).map { "- \($0.message)" }
+        let truncatedNote: String
+        if issues.count > maxItems {
+            truncatedNote = "\n- ...and \(issues.count - maxItems) more"
+        } else {
+            truncatedNote = ""
+        }
+        return lines.joined(separator: "\n") + truncatedNote
     }
 }
 

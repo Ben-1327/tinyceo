@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 enum TinyAsset {
     private static let cache = NSCache<NSString, NSImage>()
+    private static var missingLog = Set<String>()
 
     static func icon(assetName: String?, sfSymbol: String) -> Image {
         guard let assetName else {
@@ -62,6 +63,9 @@ enum TinyAsset {
             return fromImageset
         }
 
+        if missingLog.insert(assetName).inserted {
+            print("[TinyAsset] missing asset: \(assetName)")
+        }
         return nil
     }
 
