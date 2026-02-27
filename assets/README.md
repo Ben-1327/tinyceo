@@ -7,3 +7,4 @@ This directory keeps external art/audio assets for TinyCEO.
 - `licenses/`: source URL + license notes per asset bundle
 
 See `docs/20_asset_acquisition_playbook.md` for workflow.
+See `docs/23_asset_selection_notes.md` for current curated picks.
