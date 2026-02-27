@@ -148,3 +148,39 @@
   - 理由: `COMMS` は「作業カテゴリ」であり、プロジェクトdisciplineではないため
 - `CH3_SCALING` の `cardCategories` は v0.1 では空配列
   - 理由: 現データに `SCALING` カテゴリカードが未収録のため
+
+## 17. Runway 算出式（Q1確定）
+- UI表示に使う Runway は **monthly net burn** 基準で計算する
+- 日次値（シミュレーション本体の算出式と同一）:
+  - `dailyIncome = floor(mrrJPY * mrrPaidPerCompanyDayFactor)`
+  - `dailyBurn = overheadPerDay + salaryPerDay + policyCostPerDay + debtInterestPerDay`
+  - `salaryPerDay = Σ round(role.monthlySalaryJPY / 30)`
+  - `policyCostPerDay = Σ round(policy.monthlyCostJPY / 30)`
+  - `debtInterestPerDay = ceil(debtJPY * APR / 365)`（借入が有効かつ debt > 0 の場合）
+- 月次推定値:
+  - `estimatedMonthlyIncome = dailyIncome * 30`
+  - `estimatedMonthlyBurn = dailyBurn * 30`
+  - `estimatedMonthlyNetBurn = max(0, estimatedMonthlyBurn - estimatedMonthlyIncome)`
+- Runway:
+  - `cashJPY <= 0` の場合は `0ヶ月` 扱い（表示は `< 1ヶ月`）
+  - `estimatedMonthlyNetBurn == 0` の場合は `∞`
+  - それ以外は `cashJPY / estimatedMonthlyNetBurn`
+
+## 18. Inbox FULL 表示条件（Q3確定）
+- FULL バナーは次の条件を同時に満たす時だけ表示:
+  - `inbox.count >= maxInboxCards`
+  - `__inboxOverflowedSinceLastRelief == true`
+- `__inboxOverflowedSinceLastRelief` は以下で更新する:
+  - Inbox満杯でカード生成タイミングを迎え、未処理ペナルティを適用した時に `true`
+  - Inbox件数が `maxInboxCards` 未満に戻った時に `false`
+- これにより「3件入っているだけ（まだ生成タイミング前）」では FULL を出さない
+
+## 19. Popover 幅ルール（Q2確定）
+- v0.1 の標準幅は `360pt`
+- 最小幅は `300pt`（これ未満は不可）
+- 実装は将来の可変幅に備えて `defaultWidth=360pt / minWidth=300pt` の2値で保持する
+
+## 20. UI Contract（Design-Dev）
+- UI は `SimulationEngine.makeViewState(state:)` の戻り値（`GameViewState`）を参照する
+- Runway表示・Inbox FULL 判定は View 側で再計算しない
+- 作業連携ON/OFFは `GameState.isWorkIntegrationEnabled` で保持する（既定: ON）

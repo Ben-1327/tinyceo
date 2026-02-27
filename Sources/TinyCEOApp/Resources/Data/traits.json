@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "traits": [
+    {
+      "id": "TR_AI_NATIVE",
+      "name": "AI Native",
+      "effects": [
+        {
+          "op": "AI_EFFICIENCY_MULT",
+          "value": 1.2
+        }
+      ]
+    },
+    {
+      "id": "TR_PERFECTIONIST",
+      "name": "Perfectionist",
+      "effects": [
+        {
+          "op": "QUALITY_MULT",
+          "value": 1.25
+        },
+        {
+          "op": "SPEED_MULT",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "id": "TR_SHIP_FAST",
+      "name": "Ship Fast",
+      "effects": [
+        {
+          "op": "SPEED_MULT",
+          "value": 1.15
+        },
+        {
+          "op": "TECH_DEBT_MULT",
+          "value": 1.1
+        }
+      ]
+    },
+    {
+      "id": "TR_MENTOR",
+      "name": "Mentor",
+      "effects": [
+        {
+          "op": "GROWTH_MULT",
+          "value": 1.2
+        }
+      ]
+    },
+    {
+      "id": "TR_LONE_WOLF",
+      "name": "Lone Wolf",
+      "effects": [
+        {
+          "op": "COMMS_MULT",
+          "value": 0.85
+        },
+        {
+          "op": "TEAM_HEALTH_DRAIN",
+          "value": 0.2
+        }
+      ]
+    },
+    {
+      "id": "TR_CUSTOMER_LOVE",
+      "name": "Customer Love",
+      "effects": [
+        {
+          "op": "REPUTATION_GAIN_MULT",
+          "value": 1.15
+        }
+      ]
+    },
+    {
+      "id": "TR_AUTOMATION_FREAK",
+      "name": "Automation Freak",
+      "effects": [
+        {
+          "op": "OPS_OUTPUT_MULT",
+          "value": 1.2
+        },
+        {
+          "op": "TECH_DEBT_REDUCTION",
+          "value": 0.2
+        }
+      ]
+    },
+    {
+      "id": "TR_SALES_HUNTER",
+      "name": "Hunter",
+      "effects": [
+        {
+          "op": "LEADS_GAIN_MULT",
+          "value": 1.25
+        },
+        {
+          "op": "TEAM_HEALTH_DRAIN",
+          "value": 0.1
+        }
+      ]
+    },
+    {
+      "id": "TR_CALM",
+      "name": "Calm Under Fire",
+      "effects": [
+        {
+          "op": "CRISIS_PENALTY_MULT",
+          "value": 0.85
+        }
+      ]
+    },
+    {
+      "id": "TR_LEARNER",
+      "name": "Fast Learner",
+      "effects": [
+        {
+          "op": "GROWTH_MULT",
+          "value": 1.15
+        }
+      ]
+    },
+    {
+      "id": "TR_BURNOUT_RISK",
+      "name": "Burnout Risk",
+      "effects": [
+        {
+          "op": "TEAM_HEALTH_DRAIN",
+          "value": 0.3
+        },
+        {
+          "op": "SPEED_MULT",
+          "value": 1.05
+        }
+      ]
+    },
+    {
+      "id": "TR_DOCS_FIRST",
+      "name": "Docs First",
+      "effects": [
+        {
+          "op": "TECH_DEBT_MULT",
+          "value": 0.9
+        },
+        {
+          "op": "SPEED_MULT",
+          "value": 0.95
+        }
+      ]
+    },
+    {
+      "id": "TR_SECURITY_MIND",
+      "name": "Security Minded",
+      "effects": [
+        {
+          "op": "SECURITY_RISK_MULT",
+          "value": 0.8
+        },
+        {
+          "op": "SPEED_MULT",
+          "value": 0.95
+        }
+      ]
+    },
+    {
+      "id": "TR_DESIGN_SYSTEMS",
+      "name": "Design Systems",
+      "effects": [
+        {
+          "op": "DESIGN_OUTPUT_MULT",
+          "value": 1.15
+        },
+        {
+          "op": "QUALITY_MULT",
+          "value": 1.05
+        }
+      ]
+    }
+  ]
+}

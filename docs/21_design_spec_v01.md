@@ -1,9 +1,10 @@
 # 21 Design Spec v0.1 — TinyCEO UI/UX
 
-> ステータス: Draft（Codex実装前のデザイン確定版）
+> ステータス: **確定版**（アセット取得済み・実装着手可能）
 > 担当: Claude Code（デザイン）
 > 対象バージョン: v0.1
-> 実装参照: `docs/22_design_tokens.md`
+> 実装参照: `docs/22_design_tokens.md`、`docs/24_design_asset_handoff_v01.md`
+> 最終更新: 2026-02-27（アセット反映・Q1〜Q5確定反映）
 
 ---
 
@@ -30,17 +31,15 @@
 
 ---
 
-## 1. 不足情報・確認事項（実装前に要確認）
+## 1. 実装確定事項（Codex同期済み）
 
-以下は設計仮定で補っている。Codex実装時に実際の値で上書きすること。
-
-| # | 確認事項 | 現在の仮定 | 優先度 |
-|---|----------|-----------|--------|
-| Q1 | Runway計算式（monthly_burn算出方法） | overheadPerDay×30 + 給与等の固定費 | 高 |
-| Q2 | ポップオーバーの推奨幅（デザイン固定値vs可変） | 360pt固定 | 中 |
-| Q3 | Inbox上限3件のうち「FULL」表示はN件から？ | 3件到達時 | 中 |
-| Q4 | 作業連携なし（スタンドアロン）モード時のKPI表示差分 | 表示は同じ、tickの進行差分のみ | 低 |
-| Q5 | カードrarity表示が必要か？（COMMON/RARE等） | バッジとして表示する | 低 |
+| # | 項目 | 決定内容 | 状態 |
+|---|------|----------|------|
+| Q1 | Runway計算式（monthly burn） | `estimatedMonthlyNetBurn = max(0, (dailyBurn - dailyIncome) * 30)`、Runway=`cash / estimatedMonthlyNetBurn`（0なら∞） | 確定 |
+| Q2 | ポップオーバー幅 | `default=360pt` / `min=300pt`（将来可変に備え2値で保持） | 確定 |
+| Q3 | Inbox「FULL」表示条件 | `inbox==max(3)` かつ `満杯で生成タイミング超過フラグ=true` の時のみ表示 | 確定 |
+| Q4 | 作業連携OFF時の扱い | v0.1は「作業連携 ON/OFF」設定のみ。独立したスタンドアロンモードは導入しない | 確定 |
+| Q5 | カードrarityバッジ | v0.1では非表示（v0.2検討） | 確定 |
 
 ---
 
@@ -98,12 +97,20 @@
 3. macOSのシステム外観（ライト/ダーク）に追随するベース設計にするため、クリームとダークウォームチャコールの2パレットを定義し、完全準拠させる。
 4. アセット未取得でも「SF Symbols + KPIセルカード」だけで動作する段階的実装が可能。スプライトはv0.1で後付けできる。
 
-**v0.1の実装優先順:**
+**v0.1の実装優先順（アセット取得済みに基づき更新）:**
 ```
-Phase 1: SF Symbols + KPIセルカード（アセットなしで動作）
-Phase 2: ピクセルアイコン差し込み（assets/curated/ui/）
-Phase 3: オフィスイラスト装飾（assets/curated/office/）
+Phase 1: curated UIアイコン（assets/curated/ui/）を使用。
+         アセット読込失敗時のみ SF Symbols にフォールバック。
+Phase 2: オフィス装飾スプライト（assets/curated/office/）を Home Popover のフッターに追加。
+Phase 3: スタッフキャラクター表示（assets/curated/characters/）
+         ＝ v0.1 スコープ外、v0.2以降で導入。
 ```
+
+**フォールバック切替条件（Codex 実装向け）:**
+- `NSImage(named:)` が `nil` を返した場合 → 対応 SF Symbol を使用する。
+- curated アイコンは `.renderingMode(.template)` で読み込み、`foregroundColor` でトークン色を適用する。
+- Phase 2 の office スプライトは `.renderingMode(.original)` で表示（着色しない）。
+- フォールバック発生時はコンソールに `[TinyAsset] fallback: <token_name>` を出力する（デバッグ用）。
 
 ---
 
@@ -136,7 +143,7 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
     ▼                                 ▼
 ┌───────────────────────┐    ┌──────────────────────┐
 │ Inbox（カード一覧）    │    │ 設定                  │
-│ - 最大3件              │    │ - モード切替          │
+│ - 最大3件              │    │ - 作業連携 ON/OFF     │
 │ - カテゴリ・タイトル   │    │ - 通知 ON/OFF         │
 └───────────────────────┘    │ - プライバシー        │
     │  カードを選択              └──────────────────────┘
@@ -168,7 +175,7 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 
 ## 5. 主要画面モック定義
 
-> ポップオーバー幅: 360pt（固定推奨）
+> ポップオーバー幅: 標準 360pt（最小 300pt）
 > 最小高さ: 240pt / 最大高さ: 480pt（コンテンツに応じて可変）
 > フォント: SF Pro（システムフォント）、数値: SF Pro Rounded
 
@@ -403,7 +410,7 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │  │   作業連携をONにして始める（推奨）     │ │  ← Primary Button
 │  └────────────────────────────────────────┘ │
 │                                              │
-│       連携なしで始める                       │  ← Text button (secondary)
+│       作業連携をOFFで始める                 │  ← Text button (secondary)
 │                                              │
 └──────────────────────────────────────────────┘
 ```
@@ -419,10 +426,9 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │  [←]  設定                                   │  ← Header 44pt
 ├──────────────────────────────────────────────┤
 │                                              │
-│  ゲームモード                                │  ← Section header 11pt uppercase
+│  作業連携                                    │  ← Section header 11pt uppercase
 │  ─────────────────────────────────────────  │
-│  ○ 通常（作業連携あり）                      │  ← Radio item 1
-│  ○ スタンドアロン（連携なし）                │  ← Radio item 2
+│  作業連携     ──────────────────  ● ON      │  ← Toggle
 │                                              │
 │  通知                                        │
 │  ─────────────────────────────────────────  │
@@ -431,7 +437,6 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │                                              │
 │  プライバシー                                │
 │  ─────────────────────────────────────────  │
-│  作業連携     ──────────────────  ○ OFF     │
 │  [収集データを確認する ↗]                    │  ← Link to local log viewer
 │                                              │
 │  ─────────────────────────────────────────  │
@@ -495,14 +500,19 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 | Radius | 8pt | 8pt | 8pt |
 | Padding | 8pt水平 / 10pt垂直 | 同左 | 同左 |
 
-**KPI別カラーアクセント（通常時）:**
-| KPI | 値の色 | アイコン（SF Symbol） |
-|-----|-------|---------------------|
-| Cash | primary | `yensign.circle` |
-| Runway | primary | `calendar.badge.clock` |
-| Reputation | `color.accent.reputation`（#5856D6） | `star.fill` |
-| TeamHealth | `color.accent.health`（#30D158） | `heart.fill` |
-| TechDebt | `color.accent.techdebt`（#FF9F0A） | `bolt.fill` |
+**KPI別カラーアクセント・アイコン（通常時）:**
+
+| KPI | 値の色トークン | 主アイコン（curated アセット） | 主アイコンのパス | SF Symbol（fallback） |
+|-----|-------------|------------------------------|----------------|----------------------|
+| Cash | `text/primary` | `ui_cash_icon.png` | `assets/curated/ui/ui_cash_icon.png` | `yensign.circle` |
+| Runway | `text/primary` | なし（SF Symbol のみ） | — | `calendar.badge.clock` |
+| Reputation | `kpi/reputation` | `ui_reputation_icon.png` | `assets/curated/ui/ui_reputation_icon.png` | `star.fill` |
+| TeamHealth | `kpi/health` | `ui_health_icon.png` | `assets/curated/ui/ui_health_icon.png` | `heart.fill` |
+| TechDebt | `kpi/techdebt` | `ui_techdebt_icon.png` | `assets/curated/ui/ui_techdebt_icon.png` | `bolt.fill` |
+
+アイコン表示サイズ: **16pt@1x / 32pt@2x**（Kenney game-icons は 1x/2x 両方あり）
+レンダリングモード: `.renderingMode(.template)` + トークン色で着色（tintable）
+Runway のみ curated アセット未提供のため SF Symbol を正式採用。
 
 ### 7.2 Progress Bar
 
@@ -660,19 +670,23 @@ Scale: 0.98（spring animation）
 - カード詳細では Crisis Banner を非表示にする（Inbox 戻り後に再表示）。
 
 ### 10.5 Inbox満杯バナーの表示条件
-- `currentInboxCount == maxInboxCards（3）` であり、かつ次のカード生成タイミングを過ぎている場合のみ表示する。
+- `currentInboxCount == maxInboxCards（3）` かつ `hasMissedCardGenerationDueToFullInbox == true` の場合のみ表示する。
 - 3件入っていても次のタイミングが来ていない間は「もうすぐ満杯」表示はしない（過剰通知防止）。
 
 ### 10.6 Runway表示
-- `runway = cashJPY / estimatedMonthlyBurn`
-- `estimatedMonthlyBurn` の計算は Codex 側で定義する（balance.jsonの費用項目から算出）。
-- MRR = 0 の場合: Runway を「--」表示（分母ゼロ回避）。
+- `dailyIncome = floor(mrrJPY * mrrPaidPerCompanyDayFactor)`
+- `dailyBurn = overheadPerDay + salaryPerDay + policyCostPerDay + debtInterestPerDay`
+- `estimatedMonthlyNetBurn = max(0, (dailyBurn - dailyIncome) * 30)`
+- `runway = cashJPY / estimatedMonthlyNetBurn`（`estimatedMonthlyNetBurn == 0` の場合は `∞` 表示）
 - Runway < 1ヶ月: 「< 1ヶ月」と表示。
 
-### 10.7 アイコン使用指針
-- v0.1: SF Symbols のみで実装する（ピクセルアートアセットはPhase 2）。
-- KPI アイコンは 16pt テンプレート画像として描画。
-- アイコンとラベルのトップ揃えではなく中央揃えとする。
+### 10.7 アイコン使用指針（アセット取得済み版）
+- KPI アイコン（Cash/Rep/Health/Debt）: `assets/curated/ui/` の PNG を `.renderingMode(.template)` で使用する。
+- Runway: curated アセット未提供のため `calendar.badge.clock`（SF Symbol）を正式採用。
+- アセット読込失敗時のみ SF Symbol にフォールバック（条件は §3 参照）。
+- KPI アイコンは 16pt 表示（`@1x` ソースを使用。Retinaでは `@2x` を自動選択）。
+- アイコンとラベルは中央揃え（top揃え不可）。
+- カードUI背景: `assets/curated/ui/ui_card_bg.png` を ChoiceButton の背景テクスチャとして使用可能（オプション）。使用時は opacity 0.08〜0.12 程度に抑えてテキスト可読性を維持すること。
 
 ### 10.8 小ウィンドウ可読性
 - ポップオーバー最小幅を 300pt に設定（それ未満は不可）。
@@ -684,8 +698,8 @@ Scale: 0.98（spring animation）
 - 「作業連携をONにして始める」ボタン押下後:
   1. ユーザーにシステムアクセシビリティ権限ダイアログを表示
   2. 権限取得結果に関わらず onboardingCompleted = true にして先へ進む
-- 「連携なしで始める」ボタン押下後:
-  1. モード = スタンドアロンで設定
+- 「作業連携をOFFで始める」ボタン押下後:
+  1. `workIntegrationEnabled = false` を保存
   2. onboardingCompleted = true にして先へ進む
 
 ---
@@ -708,5 +722,51 @@ Scale: 0.98（spring animation）
 
 ---
 
-*納品日: 2026-02-27*
-*次ステップ: Codex が本仕様を参照して実装開始。アセット取得手順は `docs/20_asset_acquisition_playbook.md`（更新済み）を参照。*
+---
+
+## 12. アセット使用マッピング（取得済み curated アセット）
+
+> 詳細な実装 handoff は `docs/24_design_asset_handoff_v01.md` を参照。
+> ライセンス情報は `assets/licenses/*.txt` を参照。
+
+### 12.1 UI アイコン（Phase 1 — v0.1 対象）
+
+| UI要素 | ファイルパス | ソース | レンダリングモード | 表示サイズ |
+|--------|------------|--------|-----------------|----------|
+| Cash KPI アイコン | `assets/curated/ui/ui_cash_icon.png` | Kenney game-icons (medal1) | `.template` | 16pt |
+| Reputation KPI アイコン | `assets/curated/ui/ui_reputation_icon.png` | Kenney game-icons (star) | `.template` | 16pt |
+| TeamHealth KPI アイコン | `assets/curated/ui/ui_health_icon.png` | Kenney game-icons (plus) | `.template` | 16pt |
+| TechDebt KPI アイコン | `assets/curated/ui/ui_techdebt_icon.png` | Kenney game-icons (gear) | `.template` | 16pt |
+| カード背景テクスチャ | `assets/curated/ui/ui_card_bg.png` | Kenney ui-pack (button_rectangle_depth_flat) | `.original` | ストレッチ・タイル |
+| Runway KPI アイコン | N/A（SF Symbol `calendar.badge.clock` を正式採用） | — | SF Symbol | 14pt |
+
+### 12.2 オフィス装飾（Phase 2 — v0.1 任意対応）
+
+Home Popover の最下部に小さなオフィス情景として表示する。
+会社の進行度（Day数・Chapter）に応じて表示する家具・設備を変化させることで「成長」を視覚化する。
+実装は Phase 2 のため v0.1 では省略可能。
+
+| 表示タイミング | ファイルパス | 説明 |
+|-------------|------------|------|
+| 常時（Day 1〜） | `assets/curated/office/office_desk_01.png` | 基本デスク |
+| 常時（Day 1〜） | `assets/curated/office/office_monitor_01.png` | PCモニター |
+| Day 10 以降 または PRODUCT 関連カード選択後 | `assets/curated/office/office_plant_01.png` | 観葉植物（雰囲気向上） |
+| 社員2名以上 または CH2解放後 | `assets/curated/office/office_desk_02.png` | 追加デスク |
+| AI関連カード選択後 または CH2解放後 | `assets/curated/office/office_server_01.png` | サーバーラック |
+| タイルベース合成用 | `assets/curated/office/office_tilemap_oga_indoor.png` | OGA indoor tileset（将来の床/壁タイル用） |
+
+### 12.3 キャラクター（Phase 3 — v0.2 以降）
+
+| キャラクター | ファイルパス | 表示条件 |
+|------------|------------|---------|
+| Founder | `assets/curated/characters/char_founder_01.png` | 常時 |
+| DEVスタッフ | `assets/curated/characters/char_staff_dev_01.png` | DEV職種の社員がいる時 |
+| PMスタッフ | `assets/curated/characters/char_staff_pm_01.png` | PM職種の社員がいる時 |
+
+> **注意（docs/23 §3より）:** 2dPig の character/office スプライトはアトラス（PixelOfficeAssets.png）から切り出し済み。
+> 切り出し精度に課題がある場合は v0.1 では使用を省略し、SF Symbol の人型アイコン（`person.fill` 等）で代替する。
+
+---
+
+*最終更新: 2026-02-27（アセット取得済み反映・Q1〜Q5確定・handoff 完成版）*
+*参照: `docs/22_design_tokens.md`（トークン定義）、`docs/24_design_asset_handoff_v01.md`（実装 handoff）*

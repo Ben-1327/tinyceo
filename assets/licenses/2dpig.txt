@@ -1,0 +1,7 @@
+Source: https://2dpig.itch.io/pixel-office
+Pack: Pixel Office Asset Pack
+Raw File: assets/raw/2dpig/pixel-office-asset-pack.zip
+License: CC0 1.0 Universal
+Evidence: assets/raw/2dpig/pixel-office-asset-pack/LICENSE.txt
+Acquired: 2026-02-27
+Notes: Download URL generated via itch.io file endpoint for upload_id=4257769.

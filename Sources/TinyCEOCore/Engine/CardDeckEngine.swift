@@ -82,6 +82,8 @@ public struct CardDeckEngine: Sendable {
     private func effectiveWeight(for card: CardDefinition, state: GameState, data: GameData) -> Double {
         var weight = max(0, card.baseWeight)
 
+        weight *= introPhaseMultiplier(for: card, state: state)
+
         if state.metrics.cashJPY <= 120_000, ["FINANCE", "SALES"].contains(card.category) {
             weight *= 1.4
         }
@@ -110,7 +112,46 @@ public struct CardDeckEngine: Sendable {
         return weight
     }
 
+    private func introPhaseMultiplier(for card: CardDefinition, state: GameState) -> Double {
+        let introProgress = min(1.0, Double(state.activeRealMinutes) / 360.0)
+        let introStrength = 1.0 - introProgress
+
+        var multiplier = 1.0
+        switch card.category {
+        case "STRATEGY", "SALES", "PRODUCT", "PROCESS", "HIRING":
+            multiplier *= 1.0 + (0.9 * introStrength)
+        case "CULTURE":
+            multiplier *= 1.0 + (0.35 * introStrength)
+        case "FINANCE":
+            multiplier *= 1.0 - (0.30 * introStrength)
+        case "CRISIS":
+            multiplier *= 1.0 - (0.40 * introStrength)
+        case "AI":
+            multiplier *= 1.0 - (0.60 * introStrength)
+        case "INVESTOR", "EXIT":
+            multiplier *= max(0.05, 1.0 - (0.9 * introStrength))
+        default:
+            break
+        }
+
+        if state.activeRealMinutes < 240, card.category == "CRISIS" {
+            let severeCondition = state.metrics.cashJPY <= 90_000
+                || state.metrics.teamHealth <= 32
+                || state.metrics.techDebt >= 58
+            if !severeCondition {
+                multiplier *= 0.35
+            }
+        }
+
+        if state.activeRealMinutes < 180, card.category == "AI", state.metrics.aiXP == 0 {
+            multiplier *= 0.2
+        }
+
+        return max(0.01, multiplier)
+    }
+
     private func applyBacklogPenalty(state: inout GameState, data: GameData) {
+        state.flags[SystemFlagKeys.inboxOverflowedSinceLastRelief] = .bool(true)
         state.metrics.teamHealth -= 3
         state.metrics.techDebt += 2
         state.metrics.reputation -= 1

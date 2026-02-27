@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "policies": [
+    {
+      "id": "POL_CODE_REVIEW",
+      "name": "Code Review",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 50000,
+      "monthlyCostJPY": 0,
+      "effects": [
+        {
+          "op": "SPEED_MULT",
+          "value": 0.95
+        },
+        {
+          "op": "TECH_DEBT_MULT",
+          "value": 0.75
+        },
+        {
+          "op": "QUALITY_MULT",
+          "value": 1.05
+        }
+      ]
+    },
+    {
+      "id": "POL_CICD",
+      "name": "CI/CD Pipeline",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 80000,
+      "monthlyCostJPY": 10000,
+      "effects": [
+        {
+          "op": "SPEED_MULT",
+          "value": 1.05
+        },
+        {
+          "op": "CRISIS_CHANCE_MULT",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "id": "POL_ONBOARDING",
+      "name": "Onboarding",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 40000,
+      "monthlyCostJPY": 0,
+      "effects": [
+        {
+          "op": "NEW_HIRE_RAMP_DAYS",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "POL_SUPPORT_PLAYBOOK",
+      "name": "Support Playbook",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 30000,
+      "monthlyCostJPY": 0,
+      "effects": [
+        {
+          "op": "REPUTATION_LOSS_MULT",
+          "value": 0.9
+        },
+        {
+          "op": "TEAM_HEALTH_DRAIN_MULT",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "id": "POL_AI_GUIDELINES",
+      "name": "AI Usage Guidelines",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 20000,
+      "monthlyCostJPY": 0,
+      "effects": [
+        {
+          "op": "AI_RISK_MULT",
+          "value": 0.9
+        },
+        {
+          "op": "AI_EFFICIENCY_MULT",
+          "value": 1.05
+        }
+      ]
+    },
+    {
+      "id": "POL_PM_CADENCE",
+      "name": "PM Cadence (Weekly Planning)",
+      "unlockChapter": 1,
+      "upfrontCostJPY": 25000,
+      "monthlyCostJPY": 0,
+      "effects": [
+        {
+          "op": "MAX_CONCURRENT_PROJECTS",
+          "value": 3
+        },
+        {
+          "op": "WASTE_MULT",
+          "value": 0.9
+        }
+      ]
+    }
+  ]
+}

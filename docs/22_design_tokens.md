@@ -219,7 +219,7 @@ extension Font {
 
 | トークン名 | 値 | 用途 |
 |-----------|-----|------|
-| `size/popover-width` | 360pt | ポップオーバー幅（固定推奨） |
+| `size/popover-width` | 360pt | ポップオーバー標準幅（default） |
 | `size/popover-min-width` | 300pt | 最小幅 |
 | `size/header-height` | 44pt | Header bar |
 | `size/kpi-cell-height` | 56pt | KPIセル |
@@ -254,5 +254,98 @@ extension Font {
 
 ---
 
-*最終更新: 2026-02-27*
+---
+
+## 9. アセットトークン（curated アセット対応表）
+
+> アセット取得完了日: 2026-02-27
+> 詳細実装 handoff: `docs/24_design_asset_handoff_v01.md`
+
+### 9.1 実装パターン（Swift参考）
+
+```swift
+// アセットトークンの実装パターン
+enum TinyAsset {
+    /// curated アセットを読み込む。失敗時は SF Symbol フォールバックを返す。
+    static func icon(_ name: String, sfSymbol: String) -> Image {
+        if let ns = NSImage(named: name) {
+            return Image(ns: ns).renderingMode(.template)
+        }
+        // フォールバック
+        print("[TinyAsset] fallback: \(name) -> \(sfSymbol)")
+        return Image(systemName: sfSymbol)
+    }
+}
+```
+
+---
+
+### 9.2 UI アイコンアセット
+
+| トークン名 | ファイルパス（curated） | 表示サイズ | @1x ソース | @2x ソース | tint 可否 | SF Symbol（fallback） |
+|-----------|----------------------|----------|-----------|-----------|---------|----------------------|
+| `asset/icon/cash` | `assets/curated/ui/ui_cash_icon.png` | 16pt | `assets/raw/kenney/game-icons/PNG/Black/1x/medal1.png` | `…/2x/medal1.png` | ✅ template | `yensign.circle` |
+| `asset/icon/reputation` | `assets/curated/ui/ui_reputation_icon.png` | 16pt | `assets/raw/kenney/game-icons/PNG/Black/1x/star.png` | `…/2x/star.png` | ✅ template | `star.fill` |
+| `asset/icon/health` | `assets/curated/ui/ui_health_icon.png` | 16pt | `assets/raw/kenney/game-icons/PNG/Black/1x/plus.png` | `…/2x/plus.png` | ✅ template | `heart.fill` |
+| `asset/icon/techdebt` | `assets/curated/ui/ui_techdebt_icon.png` | 16pt | `assets/raw/kenney/game-icons/PNG/Black/1x/gear.png` | `…/2x/gear.png` | ✅ template | `bolt.fill` |
+| `asset/icon/runway` | N/A（curated なし） | 14pt | — | — | — | `calendar.badge.clock`（正式採用） |
+
+**tint 方法:**
+- `NSImage` を `isTemplate = true` に設定するか、SwiftUI で `.renderingMode(.template)` を使用する。
+- 適用色は対応する KPI カラートークン（`kpi/cash`、`kpi/reputation` 等）を使う。
+- Dark モード時はトークン色が自動で切り替わるため、アセット自体の Dark 版は不要。
+
+---
+
+### 9.3 カード UI テクスチャ
+
+| トークン名 | ファイルパス | 用途 | 表示方法 | tint 可否 | 推奨 opacity |
+|-----------|------------|------|--------|---------|------------|
+| `asset/texture/card-bg` | `assets/curated/ui/ui_card_bg.png` | ChoiceButton 背景テクスチャ（オプション） | ストレッチ or タイル | ❌ original | 0.08〜0.12 |
+
+**使用条件:** ChoiceButton にゲームらしさを加えたい場合のみ。テキスト可読性が下がる場合は非表示にすること。
+
+---
+
+### 9.4 オフィス装飾アセット（Phase 2）
+
+| トークン名 | ファイルパス | 表示サイズ（目安） | tint 可否 | 表示条件 |
+|-----------|------------|----------------|---------|---------|
+| `asset/office/desk-1` | `assets/curated/office/office_desk_01.png` | 32×32pt | ❌ original | Day 1〜（常時） |
+| `asset/office/desk-2` | `assets/curated/office/office_desk_02.png` | 32×32pt | ❌ original | 社員 2名以上 or CH2 解放 |
+| `asset/office/monitor` | `assets/curated/office/office_monitor_01.png` | 32×32pt | ❌ original | Day 1〜（常時） |
+| `asset/office/plant` | `assets/curated/office/office_plant_01.png` | 24×32pt | ❌ original | Day 10〜 or PRODUCT カード選択後 |
+| `asset/office/server` | `assets/curated/office/office_server_01.png` | 24×40pt | ❌ original | AI カード選択後 or CH2 解放 |
+| `asset/office/tilemap-oga` | `assets/curated/office/office_tilemap_oga_indoor.png` | タイル単位 8pt | ❌ original | Phase 3 床/壁合成用（v0.2以降） |
+
+**レンダリングモード:** `.renderingMode(.original)` — ピクセルアートの配色を維持すること。
+**スケーリング:** pixel-perfect 表示（`interpolation(.none)`）を使用し、拡大時のぼけを防ぐ。
+
+---
+
+### 9.5 キャラクターアセット（Phase 3 — v0.2 以降）
+
+| トークン名 | ファイルパス | 表示サイズ（目安） | tint 可否 | v0.1 fallback |
+|-----------|------------|----------------|---------|--------------|
+| `asset/char/founder` | `assets/curated/characters/char_founder_01.png` | 24×32pt | ❌ original | `person.fill`（SF Symbol） |
+| `asset/char/staff-dev` | `assets/curated/characters/char_staff_dev_01.png` | 24×32pt | ❌ original | `person.fill` |
+| `asset/char/staff-pm` | `assets/curated/characters/char_staff_pm_01.png` | 24×32pt | ❌ original | `person.fill` |
+
+> **注意:** 2dPig アトラスからの切り出し精度が不十分な場合は v0.1 では使用を省略し、SF Symbol で代替する。
+> 切り出し品質を確認してから判断すること（`docs/23_asset_selection_notes.md` §3 参照）。
+
+---
+
+### 9.6 ライセンス出典マトリクス
+
+| アセットグループ | ライセンス | 出典記録ファイル | クレジット要否 |
+|--------------|----------|--------------|------------|
+| Kenney game-icons（ui/ui_*.png） | CC0 1.0 Universal | `assets/licenses/kenney.txt` | 不要（CC0） |
+| Kenney ui-pack（ui/ui_card_bg.png） | CC0 1.0 Universal | `assets/licenses/kenney.txt` | 不要（CC0） |
+| 2dPig Pixel Office（office/*, characters/*） | CC0 1.0 Universal | `assets/licenses/2dpig.txt` | 不要（CC0） |
+| OGA indoor-office-appliances（office/office_tilemap_oga_indoor.png） | CC0 1.0 Universal | `assets/licenses/opengameart.txt` | 不要（CC0）、Author: semtex99 |
+
+---
+
+*最終更新: 2026-02-27（アセットトークン追加）*
 *次ステップ: Codex はこのファイルを参照して Swift の `DesignTokens.swift`（または Asset Catalog）を実装する。*
