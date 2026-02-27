@@ -18,6 +18,8 @@ struct OfficeSceneState {
     }
 
     let growthStage: GrowthStage
+    /// Actual team size shown to user (not capped by scene seat capacity)
+    let totalEmployeeCount: Int
     /// How many employee seats should be fully active (animated)
     let activeEmployeeCount: Int
     let showPlant: Bool
@@ -65,7 +67,8 @@ struct OfficeSceneState {
         case .growth: maxSeats = 4
         case .mature: maxSeats = 6
         }
-        let activeEmployeeCount = min(max(teamSize, 1), maxSeats)
+        let totalEmployeeCount = max(teamSize, 1)
+        let activeEmployeeCount = min(totalEmployeeCount, maxSeats)
 
         // Furniture thresholds (kept in sync with docs/14 §20 asset logic)
         let showPlant  = day >= 10 || hasProduct
@@ -99,6 +102,7 @@ struct OfficeSceneState {
 
         return OfficeSceneState(
             growthStage: growthStage,
+            totalEmployeeCount: totalEmployeeCount,
             activeEmployeeCount: activeEmployeeCount,
             showPlant: showPlant,
             showDesk2: showDesk2,

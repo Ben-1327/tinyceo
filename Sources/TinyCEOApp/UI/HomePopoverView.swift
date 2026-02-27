@@ -35,7 +35,7 @@ struct HomePopoverView: View {
 
                 // Decoration row (user-gated, positioned between projects and inbox)
                 if store.showOfficeDecorations {
-                    OfficeDecorationRow(snapshot: store.snapshot)
+                    OfficeDecorationRow(sceneState: officeSceneState)
                 }
 
                 // Inbox CTA — always at the bottom
@@ -48,16 +48,19 @@ struct HomePopoverView: View {
         .background(TinyTokens.ColorToken.bgPopover)
     }
 
-    // MARK: Office section
-
-    private var officeSectionView: some View {
-        let sceneState = OfficeSceneState.from(
+    private var officeSceneState: OfficeSceneState {
+        OfficeSceneState.from(
             snapshot: store.snapshot,
             viewState: store.viewState,
             focusCategory: store.focusInboxCategory
         )
+    }
+
+    // MARK: Office section
+
+    private var officeSectionView: some View {
         return AnimatedOfficeScene(
-            sceneState: sceneState,
+            sceneState: officeSceneState,
             inboxCount: store.viewState.inboxCount
         )
     }
@@ -552,7 +555,7 @@ private struct OfficeInfoStrip: View {
             // Team size
             infoPill(
                 symbol: "person.2.fill",
-                text: "社員\(sceneState.activeEmployeeCount)名",
+                text: "社員\(sceneState.totalEmployeeCount)名",
                 color: TinyTokens.ColorToken.textPrimary
             )
 
@@ -745,20 +748,20 @@ private struct CrisisBanner: View {
 // MARK: - Office Decoration Row
 
 private struct OfficeDecorationRow: View {
-    let snapshot: GameState?
+    let sceneState: OfficeSceneState
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             sprite("office_desk_01", width: 32, height: 32)
             sprite("office_monitor_01", width: 32, height: 32)
-            if showPlant {
+            if sceneState.showPlant {
                 sprite("office_plant_01", width: 24, height: 32)
             }
             Spacer(minLength: 0)
-            if showDesk2 {
+            if sceneState.showDesk2 {
                 sprite("office_desk_02", width: 32, height: 32)
             }
-            if showServer {
+            if sceneState.showServer {
                 sprite("office_server_01", width: 24, height: 40)
             }
         }
@@ -773,11 +776,6 @@ private struct OfficeDecorationRow: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-
-    private var chapter2Unlocked: Bool { (snapshot?.chapterIndex ?? 0) >= 1 }
-    private var showPlant:  Bool { snapshot.map { $0.day >= 10 || $0.hasProductLaunched } ?? false }
-    private var showDesk2:  Bool { snapshot.map { $0.teamSize >= 2 || chapter2Unlocked }  ?? false }
-    private var showServer: Bool { snapshot.map { chapter2Unlocked || $0.metrics.aiXP > 0 } ?? false }
 
     @ViewBuilder
     private func sprite(_ name: String, width: CGFloat, height: CGFloat) -> some View {
