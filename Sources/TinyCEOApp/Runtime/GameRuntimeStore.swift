@@ -45,8 +45,7 @@ final class GameRuntimeStore: ObservableObject {
     private var state: GameState?
     private var rng: SeededGenerator?
     private var timer: Timer?
-
-    private var minutesSinceLastSave = 0
+    private var lastProcessedMinuteMark = Date()
     private var hasLoadedPreferences = false
 
     private let signalProvider = SystemActivitySignalProvider()
@@ -63,10 +62,12 @@ final class GameRuntimeStore: ObservableObject {
         if engine == nil || state == nil || rng == nil {
             loadInitialState()
         }
+        lastProcessedMinuteMark = Date()
         startTimer()
     }
 
     func stop() {
+        processElapsedActiveMinutes()
         persistSnapshot(eventType: "app.stop")
         timer?.invalidate()
         timer = nil
@@ -76,15 +77,11 @@ final class GameRuntimeStore: ObservableObject {
         guard var mutableState = state, var mutableRNG = rng, let engine else { return }
 
         let activitySignal: ActivitySignal?
-        let isSessionActive: Bool
-
+        let isSessionActive = true
         if mutableState.isWorkIntegrationEnabled {
-            let signal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
-            activitySignal = signal
-            isSessionActive = !signal.isIdle
+            activitySignal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
         } else {
             activitySignal = nil
-            isSessionActive = true
         }
 
         let result = engine.processRealMinute(
@@ -101,9 +98,8 @@ final class GameRuntimeStore: ObservableObject {
 
         handleNotifications(generatedCardIDs: result.generatedCardIDs)
 
-        minutesSinceLastSave += 1
-        let shouldPersist = result.dayAdvancedBy > 0 || !result.generatedCardIDs.isEmpty || minutesSinceLastSave >= 10
-        if shouldPersist {
+        let shouldPersistEvent = result.dayAdvancedBy > 0 || !result.generatedCardIDs.isEmpty
+        if shouldPersistEvent {
             persistSnapshot(
                 eventType: "tick.persist",
                 payload: [
@@ -112,6 +108,9 @@ final class GameRuntimeStore: ObservableObject {
                     "sessionActive": String(isSessionActive)
                 ]
             )
+        } else {
+            // Persist every minute so countdown resumes from the latest point after relaunch.
+            persistSnapshot()
         }
     }
 
@@ -334,11 +333,27 @@ final class GameRuntimeStore: ObservableObject {
 
     private func startTimer() {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.tickOneRealMinute()
+                self?.processElapsedActiveMinutes()
             }
         }
+        if let timer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    private func processElapsedActiveMinutes() {
+        let now = Date()
+        let elapsedMinutes = Int(now.timeIntervalSince(lastProcessedMinuteMark) / 60.0)
+        guard elapsedMinutes > 0 else {
+            return
+        }
+
+        for _ in 0..<elapsedMinutes {
+            tickOneRealMinute()
+        }
+        lastProcessedMinuteMark = lastProcessedMinuteMark.addingTimeInterval(Double(elapsedMinutes * 60))
     }
 
     private func loadInitialState() {
@@ -460,7 +475,6 @@ final class GameRuntimeStore: ObservableObject {
             if let eventType {
                 try repository.appendEvent(type: eventType, payload: payload)
             }
-            minutesSinceLastSave = 0
         } catch {
             runtimeError = error.localizedDescription
         }

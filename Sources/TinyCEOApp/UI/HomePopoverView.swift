@@ -1,6 +1,8 @@
 import SwiftUI
 import TinyCEOCore
 
+// MARK: - Home Popover Root
+
 private enum HomePanelMode: String, CaseIterable, Identifiable {
     case office
     case summary
@@ -22,18 +24,19 @@ struct HomePopoverView: View {
     @State private var panelMode: HomePanelMode = .office
 
     private static let jpyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "JPY"
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.maximumFractionDigits = 0
-        return formatter
+        let f = NumberFormatter()
+        f.numberStyle   = .currency
+        f.currencyCode  = "JPY"
+        f.locale        = Locale(identifier: "ja_JP")
+        f.maximumFractionDigits = 0
+        return f
     }()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 header
+
                 if let crisis = store.crisisBannerText {
                     CrisisBanner(text: crisis)
                 }
@@ -46,12 +49,10 @@ struct HomePopoverView: View {
                 .pickerStyle(.segmented)
 
                 if panelMode == .office {
-                    officeMainSection
+                    officeDashboardSection
                 } else {
-                    summarySection
+                    summaryDashboardSection
                 }
-
-                inboxSection
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -59,6 +60,59 @@ struct HomePopoverView: View {
         .scrollIndicators(.never)
         .background(TinyTokens.ColorToken.bgPopover)
     }
+
+    private var officeSceneState: OfficeSceneState {
+        OfficeSceneState.from(
+            snapshot: store.snapshot,
+            viewState: store.viewState,
+            focusCategory: store.focusInboxCategory
+        )
+    }
+
+    // MARK: Office section
+
+    private var officeSectionView: some View {
+        AnimatedOfficeScene(
+            sceneState: officeSceneState,
+            inboxCount: store.viewState.inboxCount
+        )
+    }
+
+    private var officeDashboardSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            officeStatsRow
+            officeSectionView
+            Text("オフィスが成長し、社員が増えるほどシーンがにぎやかになります")
+                .font(.system(size: 11))
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+            inboxSection
+        }
+    }
+
+    private var summaryDashboardSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            kpiSection
+            projectSection
+            if store.showOfficeDecorations {
+                OfficeDecorationRow(sceneState: officeSceneState)
+            }
+            inboxSection
+        }
+    }
+
+    private var officeStatsRow: some View {
+        HStack(spacing: 6) {
+            OfficeStatPill(symbol: "person.2.fill", text: "社員 \(officeSceneState.totalEmployeeCount)名")
+            OfficeStatPill(symbol: "hammer.fill", text: "案件 \(store.projectRows.count)")
+            OfficeStatPill(symbol: "tray.fill", text: "Inbox \(store.viewState.inboxCount)")
+            if let focusCategory = officeSceneState.focusCategory {
+                let spec = EventVisualCatalog.spec(for: focusCategory)
+                OfficeStatPill(symbol: spec.fallbackSymbol, text: spec.label)
+            }
+        }
+    }
+
+    // MARK: Header
 
     private var header: some View {
         HStack(spacing: 8) {
@@ -85,49 +139,7 @@ struct HomePopoverView: View {
         }
     }
 
-    private var officeMainSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                StatPill(symbol: "person.3.fill", text: "社員 \(store.snapshot?.teamSize ?? 1)名")
-                StatPill(symbol: "hammer.fill", text: "案件 \(store.projectRows.count)")
-                StatPill(symbol: "tray.fill", text: "Inbox \(store.viewState.inboxCount)")
-                if let focusCategory = store.focusInboxCategory {
-                    let spec = EventVisualCatalog.spec(for: focusCategory)
-                    StatPill(
-                        symbol: spec.fallbackSymbol,
-                        text: spec.label
-                    )
-                }
-            }
-
-            AnimatedOfficeScene(
-                snapshot: store.snapshot,
-                focusCategory: store.focusInboxCategory,
-                riskLevel: store.viewState.riskLevel
-            )
-
-            Text("会社が成長するほどオフィスがにぎやかになります")
-                .font(.system(size: 11))
-                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
-        }
-        .padding(12)
-        .background(TinyTokens.ColorToken.bgCell)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            kpiSection
-            projectSection
-            if store.showOfficeDecorations {
-                OfficeDecorationRow(snapshot: store.snapshot)
-            }
-        }
-    }
+    // MARK: KPI grid (always visible)
 
     private var kpiSection: some View {
         VStack(spacing: 8) {
@@ -143,6 +155,8 @@ struct HomePopoverView: View {
             }
         }
     }
+
+    // MARK: Projects
 
     private var projectSection: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -178,6 +192,8 @@ struct HomePopoverView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
+
+    // MARK: Inbox CTA
 
     private var inboxSection: some View {
         HStack(spacing: 8) {
@@ -219,53 +235,55 @@ struct HomePopoverView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    // MARK: KPI models
+
     private var kpiModels: [KPIModel] {
-        let state = store.viewState
+        let s = store.viewState
         return [
             KPIModel(
                 id: "cash",
                 label: "CASH",
-                valueText: formatJPY(state.cashJPY),
+                valueText: formatJPY(s.cashJPY),
                 assetName: "ui_cash_icon",
                 fallbackSymbol: "yensign.circle",
                 accentColor: TinyTokens.ColorToken.kpiCash,
-                riskLevel: state.runway.riskLevel
+                riskLevel: s.runway.riskLevel
             ),
             KPIModel(
                 id: "runway",
                 label: "RUNWAY",
-                valueText: state.runway.displayText,
+                valueText: s.runway.displayText,
                 assetName: nil,
                 fallbackSymbol: "calendar.badge.clock",
                 accentColor: TinyTokens.ColorToken.kpiRunway,
-                riskLevel: state.runway.riskLevel
+                riskLevel: s.runway.riskLevel
             ),
             KPIModel(
                 id: "reputation",
                 label: "REP",
-                valueText: "\(Int(state.reputation.rounded()))",
+                valueText: "\(Int(s.reputation.rounded()))",
                 assetName: "ui_reputation_icon",
                 fallbackSymbol: "star.fill",
                 accentColor: TinyTokens.ColorToken.kpiReputation,
-                riskLevel: reputationRisk(reputation: state.reputation)
+                riskLevel: reputationRisk(s.reputation)
             ),
             KPIModel(
                 id: "health",
                 label: "HEALTH",
-                valueText: "\(Int(state.teamHealth.rounded()))",
+                valueText: "\(Int(s.teamHealth.rounded()))",
                 assetName: "ui_health_icon",
                 fallbackSymbol: "heart.fill",
                 accentColor: TinyTokens.ColorToken.kpiHealth,
-                riskLevel: healthRisk(health: state.teamHealth)
+                riskLevel: healthRisk(s.teamHealth)
             ),
             KPIModel(
                 id: "techDebt",
                 label: "DEBT",
-                valueText: "\(Int(state.techDebt.rounded()))",
+                valueText: "\(Int(s.techDebt.rounded()))",
                 assetName: "ui_techdebt_icon",
                 fallbackSymbol: "bolt.fill",
                 accentColor: TinyTokens.ColorToken.kpiTechDebt,
-                riskLevel: techDebtRisk(techDebt: state.techDebt)
+                riskLevel: techDebtRisk(s.techDebt)
             )
         ]
     }
@@ -274,38 +292,20 @@ struct HomePopoverView: View {
         Self.jpyFormatter.string(from: NSNumber(value: value)) ?? "¥\(value)"
     }
 
-    private func reputationRisk(reputation: Double) -> RiskLevel {
-        if reputation < 5 {
-            return .danger
-        }
-        if reputation < 15 {
-            return .warn
-        }
-        return .normal
+    private func reputationRisk(_ reputation: Double) -> RiskLevel {
+        reputation < 5  ? .danger : reputation < 15 ? .warn : .normal
     }
 
-    private func healthRisk(health: Double) -> RiskLevel {
-        if health < 30 {
-            return .danger
-        }
-        if health < 50 {
-            return .warn
-        }
-        return .normal
+    private func healthRisk(_ health: Double) -> RiskLevel {
+        health < 30 ? .danger : health < 50 ? .warn : .normal
     }
 
-    private func techDebtRisk(techDebt: Double) -> RiskLevel {
-        if techDebt > 75 {
-            return .danger
-        }
-        if techDebt > 50 {
-            return .warn
-        }
-        return .normal
+    private func techDebtRisk(_ techDebt: Double) -> RiskLevel {
+        techDebt > 75 ? .danger : techDebt > 50 ? .warn : .normal
     }
 }
 
-private struct StatPill: View {
+private struct OfficeStatPill: View {
     let symbol: String
     let text: String
 
@@ -314,22 +314,28 @@ private struct StatPill: View {
             Image(systemName: symbol)
                 .font(.system(size: 10))
             Text(text)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 10, weight: .semibold))
                 .lineLimit(1)
         }
+        .foregroundStyle(TinyTokens.ColorToken.textPrimary)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .foregroundStyle(TinyTokens.ColorToken.textPrimary)
-        .background(TinyTokens.ColorToken.bgPopover.opacity(0.6))
+        .background(TinyTokens.ColorToken.bgCell)
+        .overlay(
+            Capsule()
+                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+        )
         .clipShape(Capsule())
     }
 }
 
-private struct AnimatedOfficeScene: View {
-    let snapshot: GameState?
-    let focusCategory: String?
-    let riskLevel: RiskLevel
+// MARK: - Animated Office Scene
 
+private struct AnimatedOfficeScene: View {
+    let sceneState: OfficeSceneState
+    let inboxCount: Int
+
+    /// 6 seat anchors (normalised 0…1) arranged in 2 rows of 3
     private let seatAnchors: [CGPoint] = [
         CGPoint(x: 0.16, y: 0.30),
         CGPoint(x: 0.45, y: 0.28),
@@ -343,108 +349,152 @@ private struct AnimatedOfficeScene: View {
         TimelineView(.animation(minimumInterval: 1.0 / 8.0)) { timeline in
             GeometryReader { proxy in
                 let size = proxy.size
-                let employees = employeeKinds
                 let time = timeline.date.timeIntervalSinceReferenceDate
 
                 ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(TinyTokens.ColorToken.bgPopover.opacity(0.55))
+                    // Layer 1: Floor base
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(TinyTokens.ColorToken.bgCell)
 
+                    // Layer 2: Subtle grid
                     OfficeGridPattern()
-                        .stroke(TinyTokens.ColorToken.borderDefault.opacity(0.25), lineWidth: 0.5)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .stroke(TinyTokens.ColorToken.borderDefault.opacity(0.18), lineWidth: 0.5)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                    ForEach(Array(seatAnchors.enumerated()), id: \.offset) { index, anchor in
-                        deskSprite(at: point(anchor: anchor, in: size))
-                            .opacity(index < max(employees.count, 2) ? 1 : 0.4)
+                    // Layer 3: Furniture (desks, optional plant/server)
+                    furnitureLayer(size: size)
+
+                    // Layer 4: Animated employees
+                    employeesLayer(size: size, time: time)
+
+                    // Layer 5: Risk atmosphere wash (danger pulses)
+                    atmosphereLayer(time: time)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    // Layer 6: Event beacon (top-right, only when a category is active)
+                    if let cat = sceneState.focusCategory {
+                        EventBeacon(category: cat, riskLevel: sceneState.riskLevel, time: time)
+                            .position(x: size.width - 28, y: 28)
                     }
 
-                    if showPlant {
-                        sprite(name: "office_plant_01", width: 24, height: 32)
-                            .position(x: size.width * 0.08, y: size.height * 0.76)
-                    }
-
-                    if showDesk2 {
-                        sprite(name: "office_desk_02", width: 30, height: 30)
-                            .position(x: size.width * 0.72, y: size.height * 0.74)
-                    }
-
-                    if showServer {
-                        sprite(name: "office_server_01", width: 24, height: 40)
-                            .position(x: size.width * 0.92, y: size.height * 0.68)
-                    }
-
-                    ForEach(Array(employees.enumerated()), id: \.offset) { index, employee in
-                        let base = point(anchor: seatAnchors[index % seatAnchors.count], in: size)
-                        let motion = motionProfile(for: employee, focusedCategory: focusCategory)
-                        let speedMultiplier = speedMultiplier(for: motion)
-                        let amplitude = amplitude(for: motion)
-                        let animatedPoint = CGPoint(
-                            x: base.x + CGFloat(sin(time * 1.2 * speedMultiplier + Double(index))) * amplitude,
-                            y: base.y + CGFloat(cos(time * 1.5 * speedMultiplier + Double(index) * 0.7)) * (amplitude * 0.5) - 10
-                        )
-                        employeeSprite(kind: employee)
-                            .position(animatedPoint)
-                    }
-
-                    if let focusCategory {
-                        EventBeacon(category: focusCategory, riskLevel: riskLevel, time: time)
-                            .position(x: size.width - 18, y: 18)
+                    // Layer 7: Info strip pinned to the bottom of the scene
+                    VStack(spacing: 0) {
+                        Spacer()
+                        OfficeInfoStrip(sceneState: sceneState, inboxCount: inboxCount)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(sceneBorderColor, lineWidth: 1)
+                )
             }
-            .frame(height: 150)
+            .frame(height: 200)
         }
     }
 
-    private var employeeKinds: [EmployeeKind] {
-        let total = max(1, min(snapshot?.teamSize ?? 1, seatAnchors.count))
-        return (0..<total).map { index in
-            if index == 0 {
-                return .founder
-            }
-            return index % 2 == 0 ? .pm : .dev
-        }
-    }
+    // MARK: Layers
 
-    private func point(anchor: CGPoint, in size: CGSize) -> CGPoint {
-        CGPoint(x: size.width * anchor.x, y: size.height * anchor.y)
-    }
-
-    private var chapter2Unlocked: Bool {
-        (snapshot?.chapterIndex ?? 0) >= 1
-    }
-
-    private var showPlant: Bool {
-        guard let snapshot else { return false }
-        return snapshot.day >= 10 || snapshot.hasProductLaunched
-    }
-
-    private var showDesk2: Bool {
-        guard let snapshot else { return false }
-        return snapshot.teamSize >= 2 || chapter2Unlocked
-    }
-
-    private var showServer: Bool {
-        guard let snapshot else { return false }
-        return chapter2Unlocked || snapshot.metrics.aiXP > 0
+    private func atmosphereLayer(time: TimeInterval) -> some View {
+        let pulse: Double = sceneState.riskLevel == .danger
+            ? 0.7 + 0.3 * abs(sin(time * 1.5))
+            : 1.0
+        return LinearGradient(
+            colors: [
+                sceneState.atmosphereColor.opacity(sceneState.atmosphereOpacity * pulse),
+                .clear
+            ],
+            startPoint: .bottom,
+            endPoint: .top
+        )
     }
 
     @ViewBuilder
-    private func deskSprite(at point: CGPoint) -> some View {
+    private func furnitureLayer(size: CGSize) -> some View {
+        // Desks — dimmed beyond the active seat count to hint at future growth
+        ForEach(Array(seatAnchors.enumerated()), id: \.offset) { index, anchor in
+            let pos = point(anchor: anchor, in: size)
+            let active = index < sceneState.activeEmployeeCount
+            Group {
+                deskSprite(at: pos)
+            }
+            .opacity(active ? 1.0 : 0.22)
+        }
+
+        // Conditional decorative furniture
+        if sceneState.showPlant {
+            sprite(name: "office_plant_01", width: 24, height: 32)
+                .position(x: size.width * 0.08, y: size.height * 0.76)
+        }
+        if sceneState.showDesk2 {
+            sprite(name: "office_desk_02", width: 30, height: 30)
+                .position(x: size.width * 0.72, y: size.height * 0.74)
+        }
+        if sceneState.showServer {
+            sprite(name: "office_server_01", width: 24, height: 40)
+                .position(x: size.width * 0.92, y: size.height * 0.68)
+        }
+    }
+
+    @ViewBuilder
+    private func employeesLayer(size: CGSize, time: TimeInterval) -> some View {
+        let profile = sceneState.motionProfile
+        let speed   = speedMultiplier(for: profile)
+        let amp     = amplitude(for: profile)
+        let showDots = profile == .busy || profile == .urgent
+
+        ForEach(0..<sceneState.activeEmployeeCount, id: \.self) { index in
+            let kind: EmployeeKind = index == 0 ? .founder : (index % 2 == 0 ? .pm : .dev)
+            let base = point(anchor: seatAnchors[index % seatAnchors.count], in: size)
+            let dx = CGFloat(sin(time * 1.2 * speed + Double(index))) * amp
+            let dy = CGFloat(cos(time * 1.5 * speed + Double(index) * 0.7)) * (amp * 0.5) - 10
+            let animPos = CGPoint(x: base.x + dx, y: base.y + dy)
+
+            employeeSprite(kind: kind)
+                .overlay(alignment: .top) {
+                    if showDots {
+                        activityDots(time: time, employeeIndex: index)
+                            .offset(y: -12)
+                    }
+                }
+                .position(animPos)
+        }
+    }
+
+    // MARK: Sprite helpers
+
+    private func activityDots(time: TimeInterval, employeeIndex: Int) -> some View {
+        HStack(spacing: 3) {
+            dotDot(time: time, dotIdx: 0, employeeIndex: employeeIndex)
+            dotDot(time: time, dotIdx: 1, employeeIndex: employeeIndex)
+            dotDot(time: time, dotIdx: 2, employeeIndex: employeeIndex)
+        }
+    }
+
+    private func dotDot(time: TimeInterval, dotIdx: Int, employeeIndex: Int) -> some View {
+        let phase = time * 5.5 + Double(dotIdx) * 0.9 + Double(employeeIndex) * 0.4
+        let dy = -abs(CGFloat(sin(phase))) * 2.5
+        return Circle()
+            .fill(Color.white.opacity(0.80))
+            .frame(width: 3, height: 3)
+            .offset(y: dy)
+    }
+
+    @ViewBuilder
+    private func deskSprite(at p: CGPoint) -> some View {
         if let desk = TinyAsset.officeSprite(named: "office_desk_01") {
             desk
                 .resizable()
                 .interpolation(.none)
                 .frame(width: 30, height: 30)
-                .position(point)
+                .position(p)
         }
         if let monitor = TinyAsset.officeSprite(named: "office_monitor_01") {
             monitor
                 .resizable()
                 .interpolation(.none)
                 .frame(width: 22, height: 22)
-                .position(CGPoint(x: point.x + 10, y: point.y - 10))
+                .position(CGPoint(x: p.x + 10, y: p.y - 10))
         }
     }
 
@@ -461,7 +511,6 @@ private struct AnimatedOfficeScene: View {
     @ViewBuilder
     private func employeeSprite(kind: EmployeeKind) -> some View {
         let assetName = characterAssetName(for: kind)
-
         if let image = TinyAsset.characterSprite(named: assetName) {
             image
                 .resizable()
@@ -476,65 +525,52 @@ private struct AnimatedOfficeScene: View {
         }
     }
 
-    private func motionProfile(for employee: EmployeeKind, focusedCategory: String?) -> OfficeMotionProfile {
-        if riskLevel == .danger {
-            return .urgent
+    // MARK: Helpers
+
+    private func point(anchor: CGPoint, in size: CGSize) -> CGPoint {
+        CGPoint(x: size.width * anchor.x, y: size.height * anchor.y)
+    }
+
+    private var sceneBorderColor: Color {
+        switch sceneState.riskLevel {
+        case .danger: return TinyTokens.ColorToken.borderDanger
+        case .warn:   return TinyTokens.ColorToken.borderWarning
+        case .normal: return TinyTokens.ColorToken.borderDefault
         }
-        if let focusedCategory {
-            let focusMotion = EventVisualCatalog.spec(for: focusedCategory).motion
-            if focusMotion == .urgent || focusMotion == .busy {
-                return focusMotion
-            }
-        }
-        if employee == .founder {
-            return .steady
-        }
-        return .calm
     }
 
     private func speedMultiplier(for profile: OfficeMotionProfile) -> Double {
         switch profile {
-        case .calm:
-            return 0.85
-        case .steady:
-            return 1.0
-        case .busy:
-            return 1.2
-        case .urgent:
-            return 1.45
+        case .calm:   return 0.85
+        case .steady: return 1.0
+        case .busy:   return 1.2
+        case .urgent: return 1.45
         }
     }
 
     private func amplitude(for profile: OfficeMotionProfile) -> CGFloat {
         switch profile {
-        case .calm:
-            return 2.0
-        case .steady:
-            return 3.0
-        case .busy:
-            return 4.2
-        case .urgent:
-            return 5.2
+        case .calm:   return 2.0
+        case .steady: return 3.0
+        case .busy:   return 4.2
+        case .urgent: return 5.2
         }
     }
 
     private func characterAssetName(for kind: EmployeeKind) -> String {
         switch kind {
-        case .founder:
-            return "char_founder_01"
-        case .dev:
-            return "char_staff_dev_01"
-        case .pm:
-            return "char_staff_pm_01"
+        case .founder: return "char_founder_01"
+        case .dev:     return "char_staff_dev_01"
+        case .pm:      return "char_staff_pm_01"
         }
     }
 
     private enum EmployeeKind: Equatable {
-        case founder
-        case dev
-        case pm
+        case founder, dev, pm
     }
 }
+
+// MARK: - Event Beacon (36pt, glow ring, bobbing)
 
 private struct EventBeacon: View {
     let category: String
@@ -542,33 +578,104 @@ private struct EventBeacon: View {
     let time: TimeInterval
 
     var body: some View {
-        let spec = EventVisualCatalog.spec(for: category)
-        let bob = CGFloat(sin(time * 2.0)) * 2
+        let spec       = EventVisualCatalog.spec(for: category)
+        let bob        = CGFloat(sin(time * 2.0)) * 2.5
+        let glowPulse  = 0.20 + 0.25 * abs(sin(time * 1.8))
+        let catColor   = TinyTokens.ColorToken.categoryBadge(category)
 
         return ZStack {
+            // Outer animated glow ring
             Circle()
-                .fill(TinyTokens.ColorToken.bgPopover.opacity(0.92))
-                .frame(width: 24, height: 24)
+                .fill(catColor.opacity(glowPulse))
+                .frame(width: 50, height: 50)
+            // Background disc
+            Circle()
+                .fill(TinyTokens.ColorToken.bgPopover.opacity(0.95))
+                .frame(width: 36, height: 36)
+            // Category icon
             TinyAsset.icon(assetName: spec.iconAssetName, sfSymbol: spec.fallbackSymbol)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(TinyTokens.ColorToken.categoryBadge(category))
-                .offset(y: bob * 0.2)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(catColor)
         }
         .overlay(
             Circle()
-                .stroke(borderColor, lineWidth: 1)
+                .stroke(beaconBorderColor, lineWidth: 1.5)
+                .frame(width: 36, height: 36)
         )
-        .shadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 1)
+        .shadow(color: catColor.opacity(0.35), radius: 6, x: 0, y: 2)
         .offset(y: bob)
     }
 
-    private var borderColor: Color {
-        if riskLevel == .danger {
-            return TinyTokens.ColorToken.borderDanger
+    private var beaconBorderColor: Color {
+        switch riskLevel {
+        case .danger: return TinyTokens.ColorToken.borderDanger
+        case .warn:   return TinyTokens.ColorToken.borderWarning
+        case .normal: return TinyTokens.ColorToken.categoryBadge(category)
         }
-        return TinyTokens.ColorToken.borderDefault
     }
 }
+
+// MARK: - Office Info Strip (bottom of scene)
+
+private struct OfficeInfoStrip: View {
+    let sceneState: OfficeSceneState
+    let inboxCount: Int
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Team size
+            infoPill(
+                symbol: "person.2.fill",
+                text: "社員\(sceneState.totalEmployeeCount)名",
+                color: TinyTokens.ColorToken.textPrimary
+            )
+
+            // Focus category (if any)
+            if let cat = sceneState.focusCategory {
+                categoryPill(for: cat)
+            }
+
+            Spacer(minLength: 0)
+
+            // Inbox count
+            infoPill(
+                symbol: inboxCount > 0 ? "tray.fill" : "tray",
+                text: "Inbox \(inboxCount)",
+                color: inboxCount > 0
+                    ? TinyTokens.ColorToken.statusHealthy
+                    : TinyTokens.ColorToken.textSecondary
+            )
+        }
+        .background(.black.opacity(0.32))
+    }
+
+    private func infoPill(symbol: String, text: String, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: symbol)
+                .font(.system(size: 9))
+            Text(text)
+                .font(.system(size: 10, weight: .medium))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+    }
+
+    private func categoryPill(for cat: String) -> some View {
+        let spec = EventVisualCatalog.spec(for: cat)
+        return HStack(spacing: 3) {
+            Image(systemName: spec.fallbackSymbol)
+                .font(.system(size: 9))
+            Text(spec.label)
+                .font(.system(size: 10, weight: .medium))
+        }
+        .foregroundStyle(TinyTokens.ColorToken.categoryBadge(cat))
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+    }
+}
+
+// MARK: - Office Grid Pattern
 
 private struct OfficeGridPattern: Shape {
     func path(in rect: CGRect) -> Path {
@@ -581,17 +688,17 @@ private struct OfficeGridPattern: Shape {
             path.addLine(to: CGPoint(x: x, y: rect.height))
             x += spacing
         }
-
         var y: CGFloat = 0
         while y <= rect.height {
             path.move(to: CGPoint(x: 0, y: y))
             path.addLine(to: CGPoint(x: rect.width, y: y))
             y += spacing
         }
-
         return path
     }
 }
+
+// MARK: - KPI Cell
 
 private struct KPIModel: Identifiable {
     let id: String
@@ -636,26 +743,22 @@ private struct KPICellView: View {
 
     private func backgroundColor(for level: RiskLevel) -> Color {
         switch level {
-        case .normal:
-            return TinyTokens.ColorToken.bgCell
-        case .warn:
-            return TinyTokens.ColorToken.bgWarning
-        case .danger:
-            return TinyTokens.ColorToken.bgDanger
+        case .normal: return TinyTokens.ColorToken.bgCell
+        case .warn:   return TinyTokens.ColorToken.bgWarning
+        case .danger: return TinyTokens.ColorToken.bgDanger
         }
     }
 
     private func borderColor(for level: RiskLevel) -> Color {
         switch level {
-        case .normal:
-            return TinyTokens.ColorToken.borderDefault
-        case .warn:
-            return TinyTokens.ColorToken.borderWarning
-        case .danger:
-            return TinyTokens.ColorToken.borderDanger
+        case .normal: return TinyTokens.ColorToken.borderDefault
+        case .warn:   return TinyTokens.ColorToken.borderWarning
+        case .danger: return TinyTokens.ColorToken.borderDanger
         }
     }
 }
+
+// MARK: - Risk Badge
 
 private struct RiskBadge: View {
     let level: RiskLevel
@@ -672,26 +775,22 @@ private struct RiskBadge: View {
 
     private var label: String {
         switch level {
-        case .normal:
-            return "NORMAL"
-        case .warn:
-            return "WARN"
-        case .danger:
-            return "DANGER"
+        case .normal: return "NORMAL"
+        case .warn:   return "WARN"
+        case .danger: return "DANGER"
         }
     }
 
     private var color: Color {
         switch level {
-        case .normal:
-            return TinyTokens.ColorToken.statusHealthy
-        case .warn:
-            return TinyTokens.ColorToken.statusWarning
-        case .danger:
-            return TinyTokens.ColorToken.statusDanger
+        case .normal: return TinyTokens.ColorToken.statusHealthy
+        case .warn:   return TinyTokens.ColorToken.statusWarning
+        case .danger: return TinyTokens.ColorToken.statusDanger
         }
     }
 }
+
+// MARK: - Crisis Banner
 
 private struct CrisisBanner: View {
     let text: String
@@ -717,23 +816,23 @@ private struct CrisisBanner: View {
     }
 }
 
+// MARK: - Office Decoration Row
+
 private struct OfficeDecorationRow: View {
-    let snapshot: GameState?
+    let sceneState: OfficeSceneState
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             sprite("office_desk_01", width: 32, height: 32)
             sprite("office_monitor_01", width: 32, height: 32)
-            if showPlant {
+            if sceneState.showPlant {
                 sprite("office_plant_01", width: 24, height: 32)
             }
-
             Spacer(minLength: 0)
-
-            if showDesk2 {
+            if sceneState.showDesk2 {
                 sprite("office_desk_02", width: 32, height: 32)
             }
-            if showServer {
+            if sceneState.showServer {
                 sprite("office_server_01", width: 24, height: 40)
             }
         }
@@ -747,25 +846,6 @@ private struct OfficeDecorationRow: View {
                 .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var chapter2Unlocked: Bool {
-        (snapshot?.chapterIndex ?? 0) >= 1
-    }
-
-    private var showPlant: Bool {
-        guard let snapshot else { return false }
-        return snapshot.day >= 10 || snapshot.hasProductLaunched
-    }
-
-    private var showDesk2: Bool {
-        guard let snapshot else { return false }
-        return snapshot.teamSize >= 2 || chapter2Unlocked
-    }
-
-    private var showServer: Bool {
-        guard let snapshot else { return false }
-        return chapter2Unlocked || snapshot.metrics.aiXP > 0
     }
 
     @ViewBuilder

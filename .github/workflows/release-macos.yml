@@ -1,0 +1,28 @@
+name: release-macos
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Release Artifacts
+        run: ./scripts/build_release_artifacts.sh "${GITHUB_REF_NAME}"
+
+      - name: Publish GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/TinyCEO-${{ github.ref_name }}.dmg,dist/TinyCEO-${{ github.ref_name }}.zip,dist/TinyCEO-latest.dmg,dist/TinyCEO-latest.zip"
+          allowUpdates: true
+          replacesArtifacts: true
+          generateReleaseNotes: true
+
