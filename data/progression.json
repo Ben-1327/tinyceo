@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "chapters": [
+    {
+      "id": "CH1_BOOTSTRAP",
+      "name": "Bootstrapping",
+      "unlocks": {
+        "cardCategories": [
+          "STRATEGY",
+          "HIRING",
+          "PROCESS",
+          "SALES",
+          "PRODUCT",
+          "FINANCE",
+          "CRISIS",
+          "CULTURE",
+          "AI"
+        ],
+        "policyIds": [
+          "POL_CODE_REVIEW",
+          "POL_ONBOARDING",
+          "POL_SUPPORT_PLAYBOOK",
+          "POL_AI_GUIDELINES",
+          "POL_PM_CADENCE"
+        ]
+      }
+    },
+    {
+      "id": "CH2_FUNDRAISING",
+      "name": "Fundraising",
+      "unlockConditions": [
+        {
+          "metric": "mrrJPY",
+          "op": ">=",
+          "value": 80000
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 15
+        },
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 4
+        }
+      ],
+      "unlocks": {
+        "cardCategories": [
+          "INVESTOR"
+        ],
+        "policyIds": []
+      }
+    },
+    {
+      "id": "CH3_SCALING",
+      "name": "Scaling",
+      "unlockConditions": [
+        {
+          "metric": "mrrJPY",
+          "op": ">=",
+          "value": 250000
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 30
+        },
+        {
+          "metric": "teamSize",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "unlocks": {
+        "cardCategories": [],
+        "policyIds": []
+      }
+    },
+    {
+      "id": "CH4_EXIT",
+      "name": "Exit (IPO / M&A)",
+      "unlockConditions": [
+        {
+          "metric": "mrrJPY",
+          "op": ">=",
+          "value": 1200000
+        },
+        {
+          "metric": "reputation",
+          "op": ">=",
+          "value": 55
+        },
+        {
+          "metric": "techDebt",
+          "op": "<=",
+          "value": 25
+        }
+      ],
+      "unlocks": {
+        "cardCategories": [
+          "EXIT"
+        ],
+        "policyIds": []
+      }
+    }
+  ]
+}
