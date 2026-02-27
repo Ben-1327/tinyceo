@@ -8,7 +8,8 @@ let package = Package(
     ],
     products: [
         .library(name: "TinyCEOCore", targets: ["TinyCEOCore"]),
-        .executable(name: "tinyceo", targets: ["tinyceo"])
+        .executable(name: "tinyceo", targets: ["tinyceo"]),
+        .executable(name: "tinyceo-app", targets: ["TinyCEOApp"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-testing.git", exact: "6.2.3")
@@ -23,6 +24,13 @@ let package = Package(
         .executableTarget(
             name: "tinyceo",
             dependencies: ["TinyCEOCore"]
+        ),
+        .executableTarget(
+            name: "TinyCEOApp",
+            dependencies: ["TinyCEOCore"],
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
         ),
         .testTarget(
             name: "TinyCEOCoreTests",
