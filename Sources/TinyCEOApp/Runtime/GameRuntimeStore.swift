@@ -13,9 +13,28 @@ final class GameRuntimeStore: ObservableObject {
     @Published private(set) var requiresStickyPopover: Bool = false
     @Published private(set) var appDataDirectoryURL: URL?
 
-    @Published var notificationsEnabled: Bool = true
-    @Published var showChoiceTexture: Bool = false
-    @Published var showOfficeDecorations: Bool = true
+    @Published var cardNotificationsEnabled: Bool = true {
+        didSet {
+            persistPreferenceIfReady(key: cardNotificationsEnabledKey, value: cardNotificationsEnabled)
+            if cardNotificationsEnabled {
+                notificationManager.requestAuthorizationIfNeeded()
+            }
+        }
+    }
+    @Published var crisisNotificationsEnabled: Bool = true {
+        didSet {
+            persistPreferenceIfReady(key: crisisNotificationsEnabledKey, value: crisisNotificationsEnabled)
+            if crisisNotificationsEnabled {
+                notificationManager.requestAuthorizationIfNeeded()
+            }
+        }
+    }
+    @Published var showChoiceTexture: Bool = false {
+        didSet { persistPreferenceIfReady(key: showChoiceTextureKey, value: showChoiceTexture) }
+    }
+    @Published var showOfficeDecorations: Bool = true {
+        didSet { persistPreferenceIfReady(key: showOfficeDecorationsKey, value: showOfficeDecorations) }
+    }
 
     private var gameData: GameData?
     private var cardsByID: [String: CardDefinition] = [:]
@@ -28,8 +47,17 @@ final class GameRuntimeStore: ObservableObject {
     private var timer: Timer?
 
     private var minutesSinceLastSave = 0
+    private var hasLoadedPreferences = false
+
+    private let signalProvider = SystemActivitySignalProvider()
+    private let notificationManager = NotificationCenterManager()
 
     private let onboardingCompletedKey = "onboardingCompleted"
+    private let workIntegrationEnabledKey = "workIntegrationEnabled"
+    private let cardNotificationsEnabledKey = "cardNotificationsEnabled"
+    private let crisisNotificationsEnabledKey = "crisisNotificationsEnabled"
+    private let showChoiceTextureKey = "showChoiceTexture"
+    private let showOfficeDecorationsKey = "showOfficeDecorations"
 
     func start() {
         if engine == nil || state == nil || rng == nil {
@@ -47,10 +75,22 @@ final class GameRuntimeStore: ObservableObject {
     func tickOneRealMinute() {
         guard var mutableState = state, var mutableRNG = rng, let engine else { return }
 
+        let activitySignal: ActivitySignal?
+        let isSessionActive: Bool
+
+        if mutableState.isWorkIntegrationEnabled {
+            let signal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
+            activitySignal = signal
+            isSessionActive = !signal.isIdle
+        } else {
+            activitySignal = nil
+            isSessionActive = true
+        }
+
         let result = engine.processRealMinute(
             state: &mutableState,
-            signal: nil,
-            isSessionActive: true,
+            signal: activitySignal,
+            isSessionActive: isSessionActive,
             autoResolveCard: false,
             rng: &mutableRNG
         )
@@ -59,6 +99,8 @@ final class GameRuntimeStore: ObservableObject {
         rng = mutableRNG
         publishFromEngine()
 
+        handleNotifications(generatedCardIDs: result.generatedCardIDs)
+
         minutesSinceLastSave += 1
         let shouldPersist = result.dayAdvancedBy > 0 || !result.generatedCardIDs.isEmpty || minutesSinceLastSave >= 10
         if shouldPersist {
@@ -66,7 +108,8 @@ final class GameRuntimeStore: ObservableObject {
                 eventType: "tick.persist",
                 payload: [
                     "dayAdvancedBy": String(result.dayAdvancedBy),
-                    "generatedCards": String(result.generatedCardIDs.count)
+                    "generatedCards": String(result.generatedCardIDs.count),
+                    "sessionActive": String(isSessionActive)
                 ]
             )
         }
@@ -77,12 +120,18 @@ final class GameRuntimeStore: ObservableObject {
         mutableState.isWorkIntegrationEnabled = enabled
         state = mutableState
         snapshot = mutableState
+        UserDefaults.standard.set(enabled, forKey: workIntegrationEnabledKey)
         persistSnapshot(eventType: "settings.work_integration", payload: ["enabled": String(enabled)])
     }
 
     func completeOnboarding(workIntegrationEnabled: Bool) {
         UserDefaults.standard.set(true, forKey: onboardingCompletedKey)
         setWorkIntegrationEnabled(workIntegrationEnabled)
+
+        if workIntegrationEnabled {
+            notificationManager.requestAuthorizationIfNeeded()
+        }
+
         persistSnapshot(eventType: "onboarding.completed", payload: ["work_integration": String(workIntegrationEnabled)])
 
         if let firstCardID = state?.inbox.first?.cardId {
@@ -290,6 +339,8 @@ final class GameRuntimeStore: ObservableObject {
 
     private func loadInitialState() {
         do {
+            loadPreferences()
+
             let dataDir = try Self.resolveDataDirectory()
             let loader = DataLoader()
             let loadedGameData = try loader.loadAll(from: dataDir)
@@ -302,6 +353,10 @@ final class GameRuntimeStore: ObservableObject {
 
             let simulationEngine = SimulationEngine(data: loadedGameData)
             var loadedState = try repository?.loadLatestSnapshot() ?? GameState.initial(data: loadedGameData, seed: 42)
+            if UserDefaults.standard.object(forKey: workIntegrationEnabledKey) != nil {
+                loadedState.isWorkIntegrationEnabled = UserDefaults.standard.bool(forKey: workIntegrationEnabledKey)
+            }
+
             var loadedRNG = SeededGenerator(seed: loadedState.seed)
             simulationEngine.ensureOnStartCard(state: &loadedState, rng: &loadedRNG)
 
@@ -313,6 +368,9 @@ final class GameRuntimeStore: ObservableObject {
 
             if UserDefaults.standard.bool(forKey: onboardingCompletedKey) {
                 setScreen(.home)
+                if loadedState.isWorkIntegrationEnabled {
+                    notificationManager.requestAuthorizationIfNeeded()
+                }
             } else {
                 setScreen(.onboarding)
             }
@@ -321,6 +379,32 @@ final class GameRuntimeStore: ObservableObject {
         } catch {
             runtimeError = error.localizedDescription
         }
+    }
+
+    private func loadPreferences() {
+        let userDefaults = UserDefaults.standard
+
+        if userDefaults.object(forKey: cardNotificationsEnabledKey) != nil {
+            cardNotificationsEnabled = userDefaults.bool(forKey: cardNotificationsEnabledKey)
+        }
+        if userDefaults.object(forKey: crisisNotificationsEnabledKey) != nil {
+            crisisNotificationsEnabled = userDefaults.bool(forKey: crisisNotificationsEnabledKey)
+        }
+        if userDefaults.object(forKey: showChoiceTextureKey) != nil {
+            showChoiceTexture = userDefaults.bool(forKey: showChoiceTextureKey)
+        }
+        if userDefaults.object(forKey: showOfficeDecorationsKey) != nil {
+            showOfficeDecorations = userDefaults.bool(forKey: showOfficeDecorationsKey)
+        }
+
+        hasLoadedPreferences = true
+    }
+
+    private func persistPreferenceIfReady(key: String, value: Bool) {
+        guard hasLoadedPreferences else {
+            return
+        }
+        UserDefaults.standard.set(value, forKey: key)
     }
 
     private func setupRepository() throws {
@@ -338,10 +422,29 @@ final class GameRuntimeStore: ObservableObject {
 
     private func setScreen(_ screen: AppScreen) {
         currentScreen = screen
-        if case .cardDetail = screen {
-            requiresStickyPopover = true
-        } else {
-            requiresStickyPopover = false
+        requiresStickyPopover = {
+            if case .cardDetail = screen {
+                return true
+            }
+            return false
+        }()
+    }
+
+    private func handleNotifications(generatedCardIDs: [String]) {
+        guard !generatedCardIDs.isEmpty else {
+            return
+        }
+
+        let generatedCards = generatedCardIDs.compactMap { cardsByID[$0] }
+        notificationManager.notifyCardArrival(
+            cardCount: generatedCards.count,
+            inboxCount: viewState.inboxCount,
+            enabled: cardNotificationsEnabled
+        )
+
+        let includesCrisis = generatedCards.contains { $0.category == "CRISIS" }
+        if includesCrisis {
+            notificationManager.notifyCrisis(enabled: crisisNotificationsEnabled)
         }
     }
 

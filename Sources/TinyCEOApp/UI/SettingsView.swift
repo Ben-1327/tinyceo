@@ -21,7 +21,8 @@ struct SettingsView: View {
                     )
 
                     sectionTitle("通知")
-                    Toggle("カード到着", isOn: $store.notificationsEnabled)
+                    Toggle("カード到着", isOn: $store.cardNotificationsEnabled)
+                    Toggle("重大Crisis", isOn: $store.crisisNotificationsEnabled)
 
                     sectionTitle("プライバシー")
                     Button("収集データを確認する ↗") {

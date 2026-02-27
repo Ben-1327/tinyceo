@@ -30,6 +30,13 @@
   2. アプリ同梱リソース（`Resources/Data`）
   3. カレントディレクトリから親方向に探索した `data/`
 
+## ローカルインストール（Dropbox外で利用）
+- `scripts/install_local_app.sh` を実行すると `~/Applications/TinyCEO.app` にインストールされます。
+- 実行:
+  - `./scripts/install_local_app.sh`
+- 起動:
+  - `open ~/Applications/TinyCEO.app`
+
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）
