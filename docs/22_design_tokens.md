@@ -219,7 +219,7 @@ extension Font {
 
 | トークン名 | 値 | 用途 |
 |-----------|-----|------|
-| `size/popover-width` | 360pt | ポップオーバー幅（固定推奨） |
+| `size/popover-width` | 360pt | ポップオーバー標準幅（default） |
 | `size/popover-min-width` | 300pt | 最小幅 |
 | `size/header-height` | 44pt | Header bar |
 | `size/kpi-cell-height` | 56pt | KPIセル |

@@ -62,3 +62,56 @@ func simulationDeterministicWithSameSeed() throws {
     #expect(state1.day == state2.day)
     #expect(state1.activeProjects.count == state2.activeProjects.count)
 }
+
+@Test("runway estimate uses net burn and supports infinity")
+func runwayEstimateSupportsInfinity() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+
+    var base = GameState.initial(data: data, seed: 10)
+    base.metrics.cashJPY = 300_000
+    base.metrics.mrrJPY = 0
+
+    let baseRunway = engine.makeViewState(state: base).runway
+    #expect(baseRunway.burnRate.monthlyBurnJPY == 180_000)
+    #expect(baseRunway.burnRate.monthlyNetBurnJPY == 180_000)
+    #expect(baseRunway.monthsRemaining != nil)
+    #expect(baseRunway.riskLevel == .warn)
+
+    var profitable = base
+    profitable.metrics.mrrJPY = 220_000
+
+    let profitableRunway = engine.makeViewState(state: profitable).runway
+    #expect(profitableRunway.burnRate.monthlyNetBurnJPY == 0)
+    #expect(profitableRunway.monthsRemaining == nil)
+    #expect(profitableRunway.displayText == "∞")
+    #expect(profitableRunway.riskLevel == .normal)
+}
+
+@Test("inbox full banner appears after missed generation and clears after relief")
+func inboxFullBannerLifecycle() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 11)
+    var rng = SeededGenerator(seed: 11)
+
+    state.inbox = [
+        InboxCard(cardId: "CARD_000_VISION", cycleAdded: 0),
+        InboxCard(cardId: "CARD_001_FIRST_CLIENT", cycleAdded: 0),
+        InboxCard(cardId: "CARD_002_PRODUCT_IDEA", cycleAdded: 0)
+    ]
+
+    let before = engine.makeViewState(state: state)
+    #expect(before.showInboxFullBanner == false)
+
+    _ = CardDeckEngine(data: data).maybeGenerateCycleCard(state: &state, data: data, rng: &rng)
+
+    let afterPenalty = engine.makeViewState(state: state)
+    #expect(afterPenalty.showInboxFullBanner == true)
+
+    _ = engine.resolveNextCard(state: &state, optionIndex: 0, rng: &rng)
+
+    let afterResolve = engine.makeViewState(state: state)
+    #expect(afterResolve.inboxCount == 2)
+    #expect(afterResolve.showInboxFullBanner == false)
+}

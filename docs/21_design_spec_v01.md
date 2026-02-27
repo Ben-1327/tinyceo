@@ -30,17 +30,15 @@
 
 ---
 
-## 1. 不足情報・確認事項（実装前に要確認）
+## 1. 実装確定事項（Codex同期済み）
 
-以下は設計仮定で補っている。Codex実装時に実際の値で上書きすること。
-
-| # | 確認事項 | 現在の仮定 | 優先度 |
-|---|----------|-----------|--------|
-| Q1 | Runway計算式（monthly_burn算出方法） | overheadPerDay×30 + 給与等の固定費 | 高 |
-| Q2 | ポップオーバーの推奨幅（デザイン固定値vs可変） | 360pt固定 | 中 |
-| Q3 | Inbox上限3件のうち「FULL」表示はN件から？ | 3件到達時 | 中 |
-| Q4 | 作業連携なし（スタンドアロン）モード時のKPI表示差分 | 表示は同じ、tickの進行差分のみ | 低 |
-| Q5 | カードrarity表示が必要か？（COMMON/RARE等） | バッジとして表示する | 低 |
+| # | 項目 | 決定内容 | 状態 |
+|---|------|----------|------|
+| Q1 | Runway計算式（monthly burn） | `estimatedMonthlyNetBurn = max(0, (dailyBurn - dailyIncome) * 30)`、Runway=`cash / estimatedMonthlyNetBurn`（0なら∞） | 確定 |
+| Q2 | ポップオーバー幅 | `default=360pt` / `min=300pt`（将来可変に備え2値で保持） | 確定 |
+| Q3 | Inbox「FULL」表示条件 | `inbox==max(3)` かつ `満杯で生成タイミング超過フラグ=true` の時のみ表示 | 確定 |
+| Q4 | 作業連携OFF時の扱い | v0.1は「作業連携 ON/OFF」設定のみ。独立したスタンドアロンモードは導入しない | 確定 |
+| Q5 | カードrarityバッジ | v0.1では非表示（v0.2検討） | 確定 |
 
 ---
 
@@ -168,7 +166,7 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 
 ## 5. 主要画面モック定義
 
-> ポップオーバー幅: 360pt（固定推奨）
+> ポップオーバー幅: 標準 360pt（最小 300pt）
 > 最小高さ: 240pt / 最大高さ: 480pt（コンテンツに応じて可変）
 > フォント: SF Pro（システムフォント）、数値: SF Pro Rounded
 
@@ -403,7 +401,7 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │  │   作業連携をONにして始める（推奨）     │ │  ← Primary Button
 │  └────────────────────────────────────────┘ │
 │                                              │
-│       連携なしで始める                       │  ← Text button (secondary)
+│       作業連携をOFFで始める                 │  ← Text button (secondary)
 │                                              │
 └──────────────────────────────────────────────┘
 ```
@@ -419,10 +417,9 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │  [←]  設定                                   │  ← Header 44pt
 ├──────────────────────────────────────────────┤
 │                                              │
-│  ゲームモード                                │  ← Section header 11pt uppercase
+│  作業連携                                    │  ← Section header 11pt uppercase
 │  ─────────────────────────────────────────  │
-│  ○ 通常（作業連携あり）                      │  ← Radio item 1
-│  ○ スタンドアロン（連携なし）                │  ← Radio item 2
+│  作業連携     ──────────────────  ● ON      │  ← Toggle
 │                                              │
 │  通知                                        │
 │  ─────────────────────────────────────────  │
@@ -431,7 +428,6 @@ Phase 3: オフィスイラスト装飾（assets/curated/office/）
 │                                              │
 │  プライバシー                                │
 │  ─────────────────────────────────────────  │
-│  作業連携     ──────────────────  ○ OFF     │
 │  [収集データを確認する ↗]                    │  ← Link to local log viewer
 │                                              │
 │  ─────────────────────────────────────────  │
@@ -660,13 +656,14 @@ Scale: 0.98（spring animation）
 - カード詳細では Crisis Banner を非表示にする（Inbox 戻り後に再表示）。
 
 ### 10.5 Inbox満杯バナーの表示条件
-- `currentInboxCount == maxInboxCards（3）` であり、かつ次のカード生成タイミングを過ぎている場合のみ表示する。
+- `currentInboxCount == maxInboxCards（3）` かつ `hasMissedCardGenerationDueToFullInbox == true` の場合のみ表示する。
 - 3件入っていても次のタイミングが来ていない間は「もうすぐ満杯」表示はしない（過剰通知防止）。
 
 ### 10.6 Runway表示
-- `runway = cashJPY / estimatedMonthlyBurn`
-- `estimatedMonthlyBurn` の計算は Codex 側で定義する（balance.jsonの費用項目から算出）。
-- MRR = 0 の場合: Runway を「--」表示（分母ゼロ回避）。
+- `dailyIncome = floor(mrrJPY * mrrPaidPerCompanyDayFactor)`
+- `dailyBurn = overheadPerDay + salaryPerDay + policyCostPerDay + debtInterestPerDay`
+- `estimatedMonthlyNetBurn = max(0, (dailyBurn - dailyIncome) * 30)`
+- `runway = cashJPY / estimatedMonthlyNetBurn`（`estimatedMonthlyNetBurn == 0` の場合は `∞` 表示）
 - Runway < 1ヶ月: 「< 1ヶ月」と表示。
 
 ### 10.7 アイコン使用指針
@@ -684,8 +681,8 @@ Scale: 0.98（spring animation）
 - 「作業連携をONにして始める」ボタン押下後:
   1. ユーザーにシステムアクセシビリティ権限ダイアログを表示
   2. 権限取得結果に関わらず onboardingCompleted = true にして先へ進む
-- 「連携なしで始める」ボタン押下後:
-  1. モード = スタンドアロンで設定
+- 「作業連携をOFFで始める」ボタン押下後:
+  1. `workIntegrationEnabled = false` を保存
   2. onboardingCompleted = true にして先へ進む
 
 ---

@@ -19,6 +19,7 @@
 - データ検証: `swift run tinyceo validate-data`
 - シミュレーション実行: `swift run tinyceo simulate --real-minutes 480 --seed 123 --db /tmp/tinyceo.sqlite`
 - テスト: `swift test`
+- UI連携ViewState: `SimulationEngine.makeViewState(state:)`（Runway/Inbox FULL判定を含む）
 
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）

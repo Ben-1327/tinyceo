@@ -25,11 +25,11 @@ public struct SimulationEngine: Sendable {
     }
 
     public func ensureOnStartCard(state: inout GameState, rng: inout SeededGenerator) {
-        if state.flags["__onStartGenerated"]?.boolValue == true {
+        if state.flags[SystemFlagKeys.onStartCardGenerated]?.boolValue == true {
             return
         }
         _ = deckEngine.maybeGenerateOnStart(state: &state, data: data, rng: &rng)
-        state.flags["__onStartGenerated"] = .bool(true)
+        state.flags[SystemFlagKeys.onStartCardGenerated] = .bool(true)
     }
 
     @discardableResult
@@ -92,6 +92,7 @@ public struct SimulationEngine: Sendable {
             }
         }
 
+        clearInboxOverflowFlagIfRecovered(state: &state)
         state.clamp(with: data)
         return result
     }
@@ -108,6 +109,7 @@ public struct SimulationEngine: Sendable {
         }
 
         _ = effectExecutor.apply(card: card, optionIndex: optionIndex, state: &state, data: data, rng: &rng)
+        clearInboxOverflowFlagIfRecovered(state: &state)
         state.clamp(with: data)
         return card
     }
@@ -520,5 +522,11 @@ public struct SimulationEngine: Sendable {
             }
         }
         return value
+    }
+
+    private func clearInboxOverflowFlagIfRecovered(state: inout GameState) {
+        if state.inbox.count < data.balance.time.maxInboxCards {
+            state.flags[SystemFlagKeys.inboxOverflowedSinceLastRelief] = .bool(false)
+        }
     }
 }

@@ -111,6 +111,7 @@ public struct CardDeckEngine: Sendable {
     }
 
     private func applyBacklogPenalty(state: inout GameState, data: GameData) {
+        state.flags[SystemFlagKeys.inboxOverflowedSinceLastRelief] = .bool(true)
         state.metrics.teamHealth -= 3
         state.metrics.techDebt += 2
         state.metrics.reputation -= 1
