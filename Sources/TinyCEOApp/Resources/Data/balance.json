@@ -21,28 +21,28 @@
     "founder": {
       "categoryRatesWorkUnitsPerRealMinute": {
         "DEV": {
-          "DEV": 0.08,
-          "OPS": 0.01,
-          "RESEARCH": 0.01
+          "DEV": 0.12,
+          "OPS": 0.02,
+          "RESEARCH": 0.02
         },
         "COMMS": {
-          "PM": 0.03,
-          "SALES": 0.03,
-          "CS": 0.02
+          "PM": 0.04,
+          "SALES": 0.04,
+          "CS": 0.03
         },
         "OPS": {
-          "OPS": 0.07,
-          "PM": 0.02,
-          "DEV": 0.01
+          "OPS": 0.10,
+          "PM": 0.03,
+          "DEV": 0.02
         },
         "RESEARCH": {
-          "RESEARCH": 0.06,
-          "PM": 0.02
+          "RESEARCH": 0.09,
+          "PM": 0.03
         },
         "AI": {
-          "DEV": 0.03,
-          "PM": 0.02,
-          "RESEARCH": 0.02
+          "DEV": 0.05,
+          "PM": 0.03,
+          "RESEARCH": 0.03
         },
         "BREAK": {}
       },

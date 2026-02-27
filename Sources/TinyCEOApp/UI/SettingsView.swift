@@ -11,6 +11,44 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
+                    sectionTitle("プロフィール")
+                    TextField("あなたの名前", text: $store.playerName)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("会社名", text: $store.companyName)
+                        .textFieldStyle(.roundedBorder)
+
+                    HStack(spacing: 8) {
+                        ForEach(store.avatarOptions) { option in
+                            Button {
+                                store.selectedAvatarID = option.id
+                            } label: {
+                                VStack(spacing: 4) {
+                                    if let sprite = TinyAsset.characterSprite(named: option.assetName) {
+                                        sprite
+                                            .resizable()
+                                            .interpolation(.none)
+                                            .scaledToFit()
+                                            .frame(width: 20, height: 28)
+                                    }
+                                    Text(option.label)
+                                        .font(.system(size: 10, weight: .medium))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(store.selectedAvatarID == option.id ? TinyTokens.ColorToken.bgWarning : TinyTokens.ColorToken.bgCell)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(store.selectedAvatarID == option.id ? TinyTokens.ColorToken.borderWarning : TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                        }
+                    }
+
                     sectionTitle("作業連携")
                     Toggle(
                         "作業連携",
@@ -39,8 +77,8 @@ struct SettingsView: View {
                     }
 
                     sectionTitle("表示")
-                    Toggle("Choice Texture（既定OFF）", isOn: $store.showChoiceTexture)
-                    Toggle("Office 装飾を表示", isOn: $store.showOfficeDecorations)
+                    Toggle("選択肢テクスチャ（既定OFF）", isOn: $store.showChoiceTexture)
+                    Toggle("オフィス装飾を表示", isOn: $store.showOfficeDecorations)
 
                     Divider()
 

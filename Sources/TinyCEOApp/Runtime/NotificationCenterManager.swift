@@ -31,9 +31,9 @@ final class NotificationCenterManager {
         let title = "TinyCEO"
         let body: String
         if cardCount == 1 {
-            body = "新しいCEOカードが届きました（Inbox: \(inboxCount)件）。"
+            body = "新しいCEOカードが届きました（受信箱: \(inboxCount)件）。"
         } else {
-            body = "\(cardCount)件のCEOカードが届きました（Inbox: \(inboxCount)件）。"
+            body = "\(cardCount)件のCEOカードが届きました（受信箱: \(inboxCount)件）。"
         }
 
         postNotification(identifier: "tinyceo.card.arrival", title: title, body: body)

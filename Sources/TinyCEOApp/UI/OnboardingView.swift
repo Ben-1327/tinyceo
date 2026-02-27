@@ -32,6 +32,8 @@ struct OnboardingView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(TinyTokens.ColorToken.textPrimary)
 
+                profileSection
+
                 Text("アプリの種別（DEV / COMMS / BREAK など）を10分ごとにカテゴリとして集計します。")
                     .font(.system(size: 13))
                     .foregroundStyle(TinyTokens.ColorToken.textPrimary)
@@ -72,5 +74,73 @@ struct OnboardingView: View {
         }
         .scrollIndicators(.never)
         .background(TinyTokens.ColorToken.bgPopover)
+    }
+
+    private var profileSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("プロフィール設定")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("あなたの名前")
+                    .font(.system(size: 12))
+                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+                TextField("例: 岡田 太一", text: $store.playerName)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("会社名")
+                    .font(.system(size: 12))
+                    .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+                TextField("例: TinyCEO Studio", text: $store.companyName)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            Text("アバター")
+                .font(.system(size: 12))
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+
+            HStack(spacing: 8) {
+                ForEach(store.avatarOptions) { option in
+                    Button {
+                        store.selectedAvatarID = option.id
+                    } label: {
+                        VStack(spacing: 4) {
+                            if let sprite = TinyAsset.characterSprite(named: option.assetName) {
+                                sprite
+                                    .resizable()
+                                    .interpolation(.none)
+                                    .scaledToFit()
+                                    .frame(width: 22, height: 30)
+                            }
+                            Text(option.label)
+                                .font(.system(size: 10, weight: .medium))
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(store.selectedAvatarID == option.id ? TinyTokens.ColorToken.bgWarning : TinyTokens.ColorToken.bgCell)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(store.selectedAvatarID == option.id ? TinyTokens.ColorToken.borderWarning : TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                }
+            }
+        }
+        .padding(12)
+        .background(TinyTokens.ColorToken.bgCell)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
