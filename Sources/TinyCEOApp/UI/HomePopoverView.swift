@@ -1,8 +1,25 @@
 import SwiftUI
 import TinyCEOCore
 
+private enum HomePanelMode: String, CaseIterable, Identifiable {
+    case office
+    case summary
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .office:
+            return "オフィス"
+        case .summary:
+            return "サマリー"
+        }
+    }
+}
+
 struct HomePopoverView: View {
     @ObservedObject var store: GameRuntimeStore
+    @State private var panelMode: HomePanelMode = .office
 
     private static let jpyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -20,12 +37,21 @@ struct HomePopoverView: View {
                 if let crisis = store.crisisBannerText {
                     CrisisBanner(text: crisis)
                 }
-                kpiSection
-                projectSection
-                inboxSection
-                if store.showOfficeDecorations {
-                    OfficeDecorationRow(snapshot: store.snapshot)
+
+                Picker("表示", selection: $panelMode) {
+                    ForEach(HomePanelMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
                 }
+                .pickerStyle(.segmented)
+
+                if panelMode == .office {
+                    officeMainSection
+                } else {
+                    summarySection
+                }
+
+                inboxSection
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -51,9 +77,44 @@ struct HomePopoverView: View {
             } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 15))
+                    .padding(6)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+        }
+    }
+
+    private var officeMainSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                StatPill(symbol: "person.3.fill", text: "社員 \(store.snapshot?.teamSize ?? 1)名")
+                StatPill(symbol: "hammer.fill", text: "案件 \(store.projectRows.count)")
+                StatPill(symbol: "tray.fill", text: "Inbox \(store.viewState.inboxCount)")
+            }
+
+            AnimatedOfficeScene(snapshot: store.snapshot)
+
+            Text("会社が成長するほどオフィスがにぎやかになります")
+                .font(.system(size: 11))
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+        }
+        .padding(12)
+        .background(TinyTokens.ColorToken.bgCell)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            kpiSection
+            projectSection
+            if store.showOfficeDecorations {
+                OfficeDecorationRow(snapshot: store.snapshot)
+            }
         }
     }
 
@@ -230,6 +291,164 @@ struct HomePopoverView: View {
             return .warn
         }
         return .normal
+    }
+}
+
+private struct StatPill: View {
+    let symbol: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.system(size: 10))
+            Text(text)
+                .font(.system(size: 10, weight: .medium))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+        .background(TinyTokens.ColorToken.bgPopover.opacity(0.6))
+        .clipShape(Capsule())
+    }
+}
+
+private struct AnimatedOfficeScene: View {
+    let snapshot: GameState?
+
+    private let seatAnchors: [CGPoint] = [
+        CGPoint(x: 0.16, y: 0.30),
+        CGPoint(x: 0.45, y: 0.28),
+        CGPoint(x: 0.75, y: 0.32),
+        CGPoint(x: 0.24, y: 0.72),
+        CGPoint(x: 0.56, y: 0.68),
+        CGPoint(x: 0.83, y: 0.72)
+    ]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 12.0)) { timeline in
+            GeometryReader { proxy in
+                let size = proxy.size
+                let employees = employeeKinds
+                let time = timeline.date.timeIntervalSinceReferenceDate
+
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(TinyTokens.ColorToken.bgPopover.opacity(0.55))
+
+                    OfficeGridPattern()
+                        .stroke(TinyTokens.ColorToken.borderDefault.opacity(0.25), lineWidth: 0.5)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                    ForEach(Array(seatAnchors.enumerated()), id: \.offset) { index, anchor in
+                        deskSprite(at: point(anchor: anchor, in: size))
+                            .opacity(index < max(employees.count, 2) ? 1 : 0.4)
+                    }
+
+                    ForEach(Array(employees.enumerated()), id: \.offset) { index, employee in
+                        let base = point(anchor: seatAnchors[index % seatAnchors.count], in: size)
+                        let animatedPoint = CGPoint(
+                            x: base.x + CGFloat(sin(time * 1.2 + Double(index))) * 4,
+                            y: base.y + CGFloat(cos(time * 1.5 + Double(index) * 0.7)) * 2 - 10
+                        )
+                        employeeSprite(kind: employee)
+                            .position(animatedPoint)
+                    }
+                }
+            }
+            .frame(height: 150)
+        }
+    }
+
+    private var employeeKinds: [EmployeeKind] {
+        let total = max(1, min(snapshot?.teamSize ?? 1, seatAnchors.count))
+        return (0..<total).map { index in
+            if index == 0 {
+                return .founder
+            }
+            return index % 2 == 0 ? .pm : .dev
+        }
+    }
+
+    private func point(anchor: CGPoint, in size: CGSize) -> CGPoint {
+        CGPoint(x: size.width * anchor.x, y: size.height * anchor.y)
+    }
+
+    @ViewBuilder
+    private func deskSprite(at point: CGPoint) -> some View {
+        if let desk = TinyAsset.officeSprite(named: "office_desk_01") {
+            desk
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 30, height: 30)
+                .position(point)
+        }
+        if let monitor = TinyAsset.officeSprite(named: "office_monitor_01") {
+            monitor
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 22, height: 22)
+                .position(CGPoint(x: point.x + 10, y: point.y - 10))
+        }
+    }
+
+    @ViewBuilder
+    private func employeeSprite(kind: EmployeeKind) -> some View {
+        let assetName = characterAssetName(for: kind)
+
+        if let image = TinyAsset.characterSprite(named: assetName) {
+            image
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 20, height: 28)
+                .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
+        } else {
+            Image(systemName: "person.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+                .frame(width: 20, height: 28)
+        }
+    }
+
+    private func characterAssetName(for kind: EmployeeKind) -> String {
+        switch kind {
+        case .founder:
+            return "char_founder_01"
+        case .dev:
+            return "char_staff_dev_01"
+        case .pm:
+            return "char_staff_pm_01"
+        }
+    }
+
+    private enum EmployeeKind {
+        case founder
+        case dev
+        case pm
+    }
+}
+
+private struct OfficeGridPattern: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let spacing: CGFloat = 14
+
+        var x: CGFloat = 0
+        while x <= rect.width {
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: rect.height))
+            x += spacing
+        }
+
+        var y: CGFloat = 0
+        while y <= rect.height {
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: rect.width, y: y))
+            y += spacing
+        }
+
+        return path
     }
 }
 

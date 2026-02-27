@@ -23,6 +23,13 @@ enum TinyAsset {
         return Image(nsImage: image).renderingMode(.original)
     }
 
+    static func characterSprite(named assetName: String) -> Image? {
+        guard let image = Bundle.module.image(forResource: NSImage.Name(assetName)) else {
+            return nil
+        }
+        return Image(nsImage: image).renderingMode(.original)
+    }
+
     static func choiceTexture() -> Image? {
         guard let image = Bundle.module.image(forResource: NSImage.Name("ui_card_bg")) else {
             return nil

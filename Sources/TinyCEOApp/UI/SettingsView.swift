@@ -44,6 +44,12 @@ struct SettingsView: View {
 
                     Divider()
 
+                    Button("アプリケーションを終了") {
+                        NSApp.terminate(nil)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(TinyTokens.ColorToken.textPrimary)
+
                     Button("データをリセット（最初からやり直す）") {
                         showResetConfirmation = true
                     }
@@ -69,10 +75,18 @@ struct SettingsView: View {
             Button {
                 store.backFromSettings()
             } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14))
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14))
+                    Text("戻る")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundStyle(TinyTokens.ColorToken.textPrimary)
             Text("設定")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(TinyTokens.ColorToken.textPrimary)
