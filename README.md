@@ -37,6 +37,17 @@
 - 起動:
   - `open ~/Applications/TinyCEO.app`
 
+## 友達向け配布（GitHub Releases）
+- 配布/アップデート運用手順: `docs/26_distribution_and_updates.md`
+- 固定ダウンロードURL（最新版）:
+  - `https://github.com/Ben-1327/tinyceo/releases/latest/download/TinyCEO-latest.dmg`
+  - `https://github.com/Ben-1327/tinyceo/releases/latest/download/TinyCEO-latest.zip`
+- タグ push で配布物を自動生成:
+  - `git tag v0.1.1 && git push origin v0.1.1`
+
+## リリース成果物のローカル生成
+- `scripts/build_release_artifacts.sh v0.1.1` を実行すると `dist/` に配布用 `DMG` と `ZIP` が生成されます。
+
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）
