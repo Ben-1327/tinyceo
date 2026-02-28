@@ -56,6 +56,8 @@ final class GameRuntimeStore: ObservableObject {
     private var rng: SeededGenerator?
     private var timer: Timer?
     private var lastProcessedMinuteMark: Date?
+    private var latestActivitySignal: ActivitySignal?
+    private var lastLiveActivitySampleAt: Date?
     private var hasLoadedPreferences = false
 
     private let signalProvider = SystemActivitySignalProvider()
@@ -70,6 +72,7 @@ final class GameRuntimeStore: ObservableObject {
     private let playerNameKey = "playerName"
     private let companyNameKey = "companyName"
     private let selectedAvatarIDKey = "selectedAvatarID"
+    private let liveActivitySampleIntervalSeconds: TimeInterval = 2
 
     static let defaultPlayerName = "あなた"
     static let defaultCompanyName = "TinyCEO"
@@ -103,6 +106,8 @@ final class GameRuntimeStore: ObservableObject {
         timer?.invalidate()
         timer = nil
         lastProcessedMinuteMark = nil
+        latestActivitySignal = nil
+        lastLiveActivitySampleAt = nil
     }
 
     func tickOneRealMinute() {
@@ -111,7 +116,8 @@ final class GameRuntimeStore: ObservableObject {
         let activitySignal: ActivitySignal?
 
         if mutableState.isWorkIntegrationEnabled {
-            let signal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
+            let signal = latestActivitySignal
+                ?? signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
             activitySignal = signal
         } else {
             activitySignal = nil
@@ -153,6 +159,8 @@ final class GameRuntimeStore: ObservableObject {
         if enabled {
             activityObservation = .waiting
         } else {
+            latestActivitySignal = nil
+            lastLiveActivitySampleAt = nil
             activityObservation = .disabled
         }
         UserDefaults.standard.set(enabled, forKey: workIntegrationEnabledKey)
@@ -372,6 +380,7 @@ final class GameRuntimeStore: ObservableObject {
         timer?.invalidate()
         let scheduled = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
+                self?.refreshLiveActivityObservation()
                 self?.processElapsedActiveMinutes()
             }
         }
@@ -649,6 +658,24 @@ final class GameRuntimeStore: ObservableObject {
             truncatedNote = ""
         }
         return lines.joined(separator: "\n") + truncatedNote
+    }
+
+    private func refreshLiveActivityObservation(now: Date = Date()) {
+        guard let state, state.isWorkIntegrationEnabled, let engine else {
+            return
+        }
+
+        if let lastLiveActivitySampleAt,
+           now.timeIntervalSince(lastLiveActivitySampleAt) < liveActivitySampleIntervalSeconds {
+            return
+        }
+
+        let signal = signalProvider.currentSignal(idleThresholdMinutes: engine.data.balance.time.idleThresholdMinutes)
+        latestActivitySignal = signal
+        lastLiveActivitySampleAt = now
+
+        let category = engine.classifier.classify(signal: signal, mode: state.mode)
+        refreshActivityObservation(signal: signal, category: category)
     }
 
     private func refreshActivityObservation(signal: ActivitySignal?, category: ActivityCategory?) {
