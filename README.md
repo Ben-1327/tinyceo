@@ -37,6 +37,14 @@
 - 起動:
   - `open ~/Applications/TinyCEO.app`
 
+## 友達向け配布（簡単インストーラー）
+- `scripts/build_easy_installer.sh <version>` で、配布用ZIPを1ファイル生成します。
+- 例:
+  - `./scripts/build_easy_installer.sh v0.1.1`
+- 生成物:
+  - `dist/TinyCEO-Installer-v0.1.1.zip`
+- 受け取り側はZIP解凍後、`Install TinyCEO.command` を実行するだけでインストールできます。
+
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）

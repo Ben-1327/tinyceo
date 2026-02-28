@@ -9,7 +9,7 @@ APP_MACOS="${APP_CONTENTS}/MacOS"
 APP_RESOURCES="${APP_CONTENTS}/Resources"
 INFO_PLIST="${APP_CONTENTS}/Info.plist"
 
-echo "[1/4] Building release binary..."
+echo "[1/5] Building release binary..."
 if pgrep -x "TinyCEO" >/dev/null 2>&1; then
   echo "Stopping running TinyCEO process..."
   pkill -x "TinyCEO" || true
@@ -25,11 +25,11 @@ if [[ ! -f "${EXECUTABLE}" ]]; then
   exit 1
 fi
 
-echo "[2/4] Creating app bundle at ${APP_DIR}..."
+echo "[2/5] Creating app bundle at ${APP_DIR}..."
 rm -rf "${APP_DIR}"
 mkdir -p "${APP_MACOS}" "${APP_RESOURCES}"
 
-echo "[3/4] Installing executable and SwiftPM resource bundles..."
+echo "[3/5] Installing executable and SwiftPM resource bundles..."
 cp "${EXECUTABLE}" "${APP_MACOS}/TinyCEO"
 chmod +x "${APP_MACOS}/TinyCEO"
 
@@ -86,7 +86,11 @@ cat > "${INFO_PLIST}" <<'PLIST'
 </plist>
 PLIST
 
-echo "[4/4] Done."
+echo "[4/5] Ad-hoc signing app bundle..."
+codesign --force --deep --sign - "${APP_DIR}"
+codesign --verify --deep --strict --verbose=2 "${APP_DIR}" >/dev/null
+
+echo "[5/5] Done."
 echo "Installed: ${APP_DIR}"
 echo "User data: ${HOME}/Library/Application Support/TinyCEO/tinyceo.sqlite"
 echo
