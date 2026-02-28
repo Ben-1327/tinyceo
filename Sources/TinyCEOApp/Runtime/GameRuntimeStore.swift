@@ -12,6 +12,7 @@ final class GameRuntimeStore: ObservableObject {
     @Published private(set) var lastResolution: CardResolutionResult?
     @Published private(set) var requiresStickyPopover: Bool = false
     @Published private(set) var appDataDirectoryURL: URL?
+    @Published private(set) var activityObservation: ActivityObservation = .waiting
 
     @Published var cardNotificationsEnabled: Bool = true {
         didSet {
@@ -126,6 +127,7 @@ final class GameRuntimeStore: ObservableObject {
 
         state = mutableState
         rng = mutableRNG
+        refreshActivityObservation(signal: activitySignal, category: result.classifiedCategory)
         publishFromEngine()
 
         handleNotifications(generatedCardIDs: result.generatedCardIDs)
@@ -148,6 +150,11 @@ final class GameRuntimeStore: ObservableObject {
         mutableState.isWorkIntegrationEnabled = enabled
         state = mutableState
         snapshot = mutableState
+        if enabled {
+            activityObservation = .waiting
+        } else {
+            activityObservation = .disabled
+        }
         UserDefaults.standard.set(enabled, forKey: workIntegrationEnabledKey)
         persistSnapshot(eventType: "settings.work_integration", payload: ["enabled": String(enabled)])
     }
@@ -436,6 +443,7 @@ final class GameRuntimeStore: ObservableObject {
             rng = loadedRNG
             runtimeError = nil
             publishFromEngine()
+            activityObservation = loadedState.isWorkIntegrationEnabled ? .waiting : .disabled
 
             if UserDefaults.standard.bool(forKey: onboardingCompletedKey) {
                 setScreen(.home)
@@ -642,12 +650,65 @@ final class GameRuntimeStore: ObservableObject {
         }
         return lines.joined(separator: "\n") + truncatedNote
     }
+
+    private func refreshActivityObservation(signal: ActivitySignal?, category: ActivityCategory?) {
+        guard let signal else {
+            activityObservation = .disabled
+            return
+        }
+
+        activityObservation = ActivityObservation(
+            status: .sampled,
+            appName: signal.processName ?? "不明",
+            bundleID: signal.bundleId ?? "不明",
+            domain: signal.domain,
+            category: category?.rawValue ?? "RESEARCH",
+            isIdle: signal.isIdle,
+            sampledAt: Date()
+        )
+    }
 }
 
 struct AvatarOption: Identifiable, Equatable {
     let id: String
     let label: String
     let assetName: String
+}
+
+struct ActivityObservation: Equatable {
+    enum Status: Equatable {
+        case waiting
+        case disabled
+        case sampled
+    }
+
+    let status: Status
+    let appName: String
+    let bundleID: String
+    let domain: String?
+    let category: String
+    let isIdle: Bool
+    let sampledAt: Date?
+
+    static let waiting = ActivityObservation(
+        status: .waiting,
+        appName: "取得待ち",
+        bundleID: "-",
+        domain: nil,
+        category: "-",
+        isIdle: false,
+        sampledAt: nil
+    )
+
+    static let disabled = ActivityObservation(
+        status: .disabled,
+        appName: "作業連携OFF",
+        bundleID: "-",
+        domain: nil,
+        category: "-",
+        isIdle: false,
+        sampledAt: nil
+    )
 }
 
 private extension GameViewState {

@@ -57,6 +57,7 @@ struct SettingsView: View {
                             set: { store.setWorkIntegrationEnabled($0) }
                         )
                     )
+                    activityDiagnosticsPanel
 
                     sectionTitle("通知")
                     Toggle("カード到着", isOn: $store.cardNotificationsEnabled)
@@ -128,6 +129,44 @@ struct SettingsView: View {
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(TinyTokens.ColorToken.textSecondary)
             .textCase(.uppercase)
+    }
+
+    private var activityDiagnosticsPanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("現在のアプリ: \(store.activityObservation.appName)")
+            Text("Bundle ID: \(store.activityObservation.bundleID)")
+            Text("URLドメイン: \(store.activityObservation.domain ?? "-")")
+            Text("判定カテゴリ: \(store.activityObservation.category)")
+            Text("状態: \(statusText(store.activityObservation))")
+            if let sampledAt = store.activityObservation.sampledAt {
+                Text("最終取得: \(sampledAt.formatted(date: .omitted, time: .standard))")
+            }
+            Text("反映先: プロジェクト進捗・AI経験値・健康回復")
+                .foregroundStyle(TinyTokens.ColorToken.textSecondary)
+        }
+        .font(.system(size: 11))
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TinyTokens.ColorToken.bgCell)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(TinyTokens.ColorToken.borderDefault, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func statusText(_ observation: ActivityObservation) -> String {
+        switch observation.status {
+        case .waiting:
+            return "取得待ち"
+        case .disabled:
+            return "作業連携OFF"
+        case .sampled:
+            if observation.isIdle {
+                return "アイドル判定"
+            }
+            return "取得中"
+        }
     }
 
     private func openAppDataDirectory() {

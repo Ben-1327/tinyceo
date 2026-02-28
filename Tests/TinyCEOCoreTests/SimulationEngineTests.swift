@@ -195,3 +195,43 @@ func openingCardsBiasBootstrapCategories() throws {
 
     #expect(bootstrapCount > advancedCount)
 }
+
+@Test("project progress advances before next company day")
+func projectProgressAdvancesBeforeNextCompanyDay() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 123)
+    var rng = SeededGenerator(seed: 123)
+    state.strategy = .contractHeavy
+
+    _ = engine.processRealMinute(
+        state: &state,
+        signal: ActivitySignal(bundleId: "com.microsoft.VSCode", processName: "Code", domain: nil, isIdle: false),
+        isSessionActive: true,
+        autoResolveCard: false,
+        rng: &rng
+    )
+
+    #expect(!state.activeProjects.isEmpty)
+    let before = totalRemainingWork(state.activeProjects)
+
+    for _ in 0..<10 {
+        _ = engine.processRealMinute(
+            state: &state,
+            signal: ActivitySignal(bundleId: "com.microsoft.VSCode", processName: "Code", domain: nil, isIdle: false),
+            isSessionActive: true,
+            autoResolveCard: false,
+            rng: &rng
+        )
+    }
+
+    let after = totalRemainingWork(state.activeProjects)
+    #expect(after < before)
+    #expect(state.day == 1)
+}
+
+private func totalRemainingWork(_ projects: [ProjectProgress]) -> Double {
+    projects.reduce(0) { partial, project in
+        partial + project.workRemaining.values.reduce(0, +)
+    }
+}

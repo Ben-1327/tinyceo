@@ -4,6 +4,8 @@ public struct SimulationStepResult: Sendable {
     public var generatedCardIDs: [String] = []
     public var resolvedCardID: String?
     public var dayAdvancedBy: Int = 0
+    public var classifiedCategory: ActivityCategory?
+    public var sampledDomain: String?
     public var logs: [String] = []
 }
 
@@ -55,7 +57,14 @@ public struct SimulationEngine: Sendable {
         }
 
         let category = classifier.classify(signal: signal ?? ActivitySignal(), mode: state.mode)
+        result.classifiedCategory = category
+        result.sampledDomain = signal?.domain
         accumulateFounderWork(category: category, state: &state)
+
+        ensureProjectPipeline(state: &state, rng: &rng)
+        allocateFounderWork(state: &state)
+        settleCompletedProjects(state: &state)
+        ensureProjectPipeline(state: &state, rng: &rng)
 
         if category == .ai {
             state.metrics.aiXP += data.balance.dynamics.ai.xpPerRealMinuteInAICategory
@@ -272,7 +281,19 @@ public struct SimulationEngine: Sendable {
             template.type == chosenType && !activeIDs.contains(template.id)
         }
 
+        let feasibleCandidates = candidates.filter { isProjectFeasible($0, state: state) }
+        if let candidate = rng.chooseElement(feasibleCandidates) {
+            return candidate
+        }
+
         if let candidate = rng.chooseElement(candidates) {
+            return candidate
+        }
+
+        let feasibleByType = data.projects.projects.filter { template in
+            template.type == chosenType && isProjectFeasible(template, state: state)
+        }
+        if let candidate = rng.chooseElement(feasibleByType) {
             return candidate
         }
 
@@ -283,6 +304,17 @@ public struct SimulationEngine: Sendable {
         guard !state.activeProjects.isEmpty else {
             state.unassignedFounderWork.removeAll()
             state.unassignedTeamWork.removeAll()
+            return
+        }
+
+        allocateFounderWork(state: &state)
+        allocateTeamWork(state: &state)
+        state.unassignedTeamWork.removeAll()
+    }
+
+    private func allocateFounderWork(state: inout GameState) {
+        guard !state.activeProjects.isEmpty else {
+            state.unassignedFounderWork.removeAll()
             return
         }
 
@@ -299,6 +331,10 @@ public struct SimulationEngine: Sendable {
             }
         }
 
+        state.unassignedFounderWork.removeAll()
+    }
+
+    private func allocateTeamWork(state: inout GameState) {
         for (discipline, amount) in state.unassignedTeamWork {
             var remaining = amount
             while remaining > 0 {
@@ -315,9 +351,41 @@ public struct SimulationEngine: Sendable {
                 remaining -= used
             }
         }
+    }
 
-        state.unassignedFounderWork.removeAll()
-        state.unassignedTeamWork.removeAll()
+    private func isProjectFeasible(_ template: ProjectTemplate, state: GameState) -> Bool {
+        let availableDisciplines = discoverAvailableDisciplines(state: state)
+        for (discipline, required) in template.workRequired where required > 0 {
+            if !availableDisciplines.contains(discipline) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private func discoverAvailableDisciplines(state: GameState) -> Set<String> {
+        var disciplines: Set<String> = []
+
+        for ratesByDiscipline in data.balance.workConversion.founder.categoryRatesWorkUnitsPerRealMinute.values {
+            for (discipline, rate) in ratesByDiscipline where rate > 0 {
+                disciplines.insert(discipline)
+            }
+        }
+
+        for employee in state.employees where employee.roleId != "ROLE_FOUNDER" {
+            guard let role = data.roles.roles.first(where: { $0.id == employee.roleId }) else {
+                continue
+            }
+            for (discipline, output) in role.baseOutputWorkUnitsPerCompanyDay where output > 0 {
+                disciplines.insert(discipline)
+            }
+        }
+
+        for temp in state.temporaryCapacityEffects where temp.workUnitsPerDay > 0 {
+            disciplines.insert(temp.discipline)
+        }
+
+        return disciplines
     }
 
     private func prioritizedProjectIndices(projects: [ProjectProgress], strategy: Strategy) -> [Int] {
