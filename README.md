@@ -45,6 +45,14 @@
   - `dist/TinyCEO-Installer-v0.1.1.zip`
 - 受け取り側はZIP解凍後、`Install TinyCEO.command` を実行するだけでインストールできます。
 
+## 友達向け配布（Gatekeeper回避の推奨手順）
+- 受け取り側が `Install *.command` / `TinyCEO.app` の検証エラーで止まる場合は、以下の1コマンドを使用してください。
+- 最新版をインストール:
+  - `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Ben-1327/tinyceo/main/scripts/install_release.sh)"`
+- バージョン指定でインストール:
+  - `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Ben-1327/tinyceo/main/scripts/install_release.sh)" -- v0.1.2`
+- このスクリプトは、Release から DMG を取得して `TinyCEO.app` を配置し、quarantine属性を除去して起動します。
+
 ## フォルダ構成
 - `docs/` : 仕様書（GDD / システム / UX / バランス / テスト）
 - `data/` : ゲームデータ（バランス、カード、プロジェクト、役割、特性、制度、進行）
