@@ -13,6 +13,11 @@ public struct DailyComputation: Sendable {
     public var producedWorkByDiscipline: [String: Double]
 }
 
+public struct ProgressLockReliefResult: Sendable {
+    public var blockedDisciplines: [String]
+    public var cashBridgeJPY: Int
+}
+
 public struct SimulationEngine: Sendable {
     public let data: GameData
     public let classifier: ActivityClassifier
@@ -34,6 +39,44 @@ public struct SimulationEngine: Sendable {
         }
         _ = deckEngine.maybeGenerateOnStart(state: &state, data: data, rng: &rng)
         state.flags[SystemFlagKeys.onStartCardGenerated] = .bool(true)
+    }
+
+    public func applyProgressLockReliefIfNeeded(state: inout GameState) -> ProgressLockReliefResult? {
+        if state.flags[SystemFlagKeys.progressLockReliefApplied]?.boolValue == true {
+            return nil
+        }
+        if state.day < 10 || state.teamSize > 1 || !state.completedProjectIDs.isEmpty {
+            return nil
+        }
+
+        let blocked = blockedDisciplines(state: state).sorted()
+        if blocked.isEmpty {
+            return nil
+        }
+
+        for discipline in blocked {
+            if hasSufficientTempCapacity(for: discipline, state: state) {
+                continue
+            }
+            let (workUnits, days) = reliefCapacity(for: discipline)
+            state.temporaryCapacityEffects.append(
+                TemporaryCapacityEffect(
+                    discipline: discipline,
+                    workUnitsPerDay: workUnits,
+                    remainingDays: days
+                )
+            )
+        }
+
+        let targetCash = 120_000
+        let cashBridge = max(0, targetCash - state.metrics.cashJPY)
+        if cashBridge > 0 {
+            state.metrics.cashJPY += cashBridge
+        }
+
+        state.flags[SystemFlagKeys.progressLockReliefApplied] = .bool(true)
+        state.clamp(with: data)
+        return ProgressLockReliefResult(blockedDisciplines: blocked, cashBridgeJPY: cashBridge)
     }
 
     @discardableResult
@@ -386,6 +429,38 @@ public struct SimulationEngine: Sendable {
         }
 
         return disciplines
+    }
+
+    private func blockedDisciplines(state: GameState) -> Set<String> {
+        let available = discoverAvailableDisciplines(state: state)
+        var blocked: Set<String> = []
+        for project in state.activeProjects {
+            for (discipline, remaining) in project.workRemaining where remaining > 0.0001 {
+                if !available.contains(discipline) {
+                    blocked.insert(discipline)
+                }
+            }
+        }
+        return blocked
+    }
+
+    private func hasSufficientTempCapacity(for discipline: String, state: GameState) -> Bool {
+        state.temporaryCapacityEffects.contains { effect in
+            effect.discipline == discipline && effect.remainingDays >= 8 && effect.workUnitsPerDay >= 4
+        }
+    }
+
+    private func reliefCapacity(for discipline: String) -> (Double, Int) {
+        switch discipline {
+        case "OPS":
+            return (8, 20)
+        case "DESIGN":
+            return (6, 20)
+        case "CS":
+            return (4, 18)
+        default:
+            return (5, 16)
+        }
     }
 
     private func prioritizedProjectIndices(projects: [ProjectProgress], strategy: Strategy) -> [Int] {

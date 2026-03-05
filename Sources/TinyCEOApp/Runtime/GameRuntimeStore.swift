@@ -446,6 +446,7 @@ final class GameRuntimeStore: ObservableObject {
 
             var loadedRNG = SeededGenerator(seed: loadedState.seed)
             simulationEngine.ensureOnStartCard(state: &loadedState, rng: &loadedRNG)
+            let progressRelief = simulationEngine.applyProgressLockReliefIfNeeded(state: &loadedState)
 
             engine = simulationEngine
             state = loadedState
@@ -464,6 +465,15 @@ final class GameRuntimeStore: ObservableObject {
             }
 
             persistSnapshot(eventType: "app.start")
+            if let progressRelief {
+                persistSnapshot(
+                    eventType: "recovery.progress_lock_relief",
+                    payload: [
+                        "blockedDisciplines": progressRelief.blockedDisciplines.joined(separator: ","),
+                        "cashBridgeJPY": String(progressRelief.cashBridgeJPY)
+                    ]
+                )
+            }
         } catch {
             runtimeError = error.localizedDescription
         }

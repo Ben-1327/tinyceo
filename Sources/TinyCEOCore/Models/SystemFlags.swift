@@ -3,4 +3,5 @@ public enum SystemFlagKeys {
     public static let inboxOverflowedSinceLastRelief = "__inboxOverflowedSinceLastRelief"
     public static let workIntegrationEnabled = "__workIntegrationEnabled"
     public static let nextCardIntervalRealMinutes = "__nextCardIntervalRealMinutes"
+    public static let progressLockReliefApplied = "__progressLockReliefApplied"
 }

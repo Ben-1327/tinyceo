@@ -230,6 +230,76 @@ func projectProgressAdvancesBeforeNextCompanyDay() throws {
     #expect(state.day == 1)
 }
 
+@Test("first hire card can unlock without completed contract once day and cash are met")
+func firstHireCardUnlocksWithoutCompletedContract() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    guard let hireCard = data.cards.cards.first(where: { $0.id == "CARD_HIRE_ENG_JR" }) else {
+        Issue.record("CARD_HIRE_ENG_JR not found")
+        return
+    }
+
+    var state = GameState.initial(data: data, seed: 201)
+    state.day = 4
+    state.metrics.cashJPY = 130_000
+
+    #expect(ConditionEvaluator.evaluateAll(hireCard.conditions, state: state, data: data))
+}
+
+@Test("AI activity now contributes OPS progress for solo founder")
+func aiActivityContributesOpsProgress() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 301)
+    var rng = SeededGenerator(seed: 301)
+
+    state.strategy = .contractHeavy
+    state.activeProjects = [
+        ProjectProgress(id: "TEST_LOCKED_OPS", type: "CONTRACT", createdDay: 1, workRemaining: ["OPS": 10])
+    ]
+
+    _ = engine.processRealMinute(
+        state: &state,
+        signal: ActivitySignal(bundleId: "com.google.Chrome", processName: "Codex", domain: "chatgpt.com", isIdle: false),
+        isSessionActive: true,
+        autoResolveCard: false,
+        rng: &rng
+    )
+
+    let remainingOps = state.activeProjects.first(where: { $0.id == "TEST_LOCKED_OPS" })?.workRemaining["OPS"] ?? 10
+    #expect(remainingOps < 10)
+}
+
+@Test("progress lock relief injects missing discipline support for legacy save")
+func progressLockReliefInjectsMissingSupport() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 401)
+
+    state.day = 25
+    state.metrics.cashJPY = 40_000
+    state.activeProjects = [
+        ProjectProgress(
+            id: "LEGACY_LOCK",
+            type: "PRODUCT",
+            createdDay: 10,
+            workRemaining: [
+                "DESIGN": 18,
+                "DEV": 12
+            ]
+        )
+    ]
+
+    let relief = engine.applyProgressLockReliefIfNeeded(state: &state)
+    #expect(relief != nil)
+    #expect(relief?.blockedDisciplines.contains("DESIGN") == true)
+    #expect(state.flags[SystemFlagKeys.progressLockReliefApplied]?.boolValue == true)
+    #expect(state.metrics.cashJPY >= 120_000)
+    #expect(state.temporaryCapacityEffects.contains(where: { $0.discipline == "DESIGN" && $0.workUnitsPerDay >= 6 }))
+
+    let secondPass = engine.applyProgressLockReliefIfNeeded(state: &state)
+    #expect(secondPass == nil)
+}
+
 private func totalRemainingWork(_ projects: [ProjectProgress]) -> Double {
     projects.reduce(0) { partial, project in
         partial + project.workRemaining.values.reduce(0, +)

@@ -14,7 +14,7 @@
     "loan": {
       "enabled": true,
       "baseInterestAPR": 0.12,
-      "maxDebtToMRRRatio": 6.0
+      "maxDebtToMRRRatio": 6
     }
   },
   "workConversion": {
@@ -31,25 +31,27 @@
           "CS": 0.03
         },
         "OPS": {
-          "OPS": 0.10,
+          "OPS": 0.1,
           "PM": 0.03,
           "DEV": 0.02
         },
         "RESEARCH": {
           "RESEARCH": 0.09,
-          "PM": 0.03
+          "PM": 0.03,
+          "OPS": 0.04
         },
         "AI": {
           "DEV": 0.05,
           "PM": 0.03,
-          "RESEARCH": 0.03
+          "RESEARCH": 0.03,
+          "OPS": 0.04
         },
         "BREAK": {}
       },
       "breakRecoversTeamHealthPerRealMinute": 0.12
     },
     "company": {
-      "baseEfficiencyMultiplier": 1.0,
+      "baseEfficiencyMultiplier": 1,
       "techDebtSpeedPenaltyPerPoint": 0.004,
       "teamHealthSpeedBonusPerPointFrom50": 0.003
     }
@@ -71,7 +73,7 @@
     },
     "ai": {
       "maxLevel": 5,
-      "xpPerRealMinuteInAICategory": 1.0,
+      "xpPerRealMinuteInAICategory": 1,
       "levelThresholdsXP": [
         0,
         240,
