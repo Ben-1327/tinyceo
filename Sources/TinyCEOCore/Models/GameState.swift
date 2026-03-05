@@ -128,7 +128,9 @@ public struct GameState: Codable, Sendable {
 
     public var inbox: [InboxCard]
     public var cardCooldownUntilCycle: [String: Int]
+    public var cardTitleCooldownUntilCycle: [String: Int]?
     public var recentCardCategories: [String]
+    public var recentCardTitleKeys: [String]?
 
     public var chapterIndex: Int
     public var mode: String
@@ -171,7 +173,9 @@ public struct GameState: Codable, Sendable {
             completedProjectsByType: [:],
             inbox: [],
             cardCooldownUntilCycle: [:],
+            cardTitleCooldownUntilCycle: [:],
             recentCardCategories: [],
+            recentCardTitleKeys: [],
             chapterIndex: 0,
             mode: data.activityRules.defaultMode,
             isGameOver: false,

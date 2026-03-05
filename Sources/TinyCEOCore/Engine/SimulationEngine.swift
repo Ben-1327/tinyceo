@@ -325,22 +325,69 @@ public struct SimulationEngine: Sendable {
         }
 
         let feasibleCandidates = candidates.filter { isProjectFeasible($0, state: state) }
-        if let candidate = rng.chooseElement(feasibleCandidates) {
+        if let candidate = chooseProjectTemplate(from: feasibleCandidates, state: state, rng: &rng) {
             return candidate
         }
 
-        if let candidate = rng.chooseElement(candidates) {
+        if let candidate = chooseProjectTemplate(from: candidates, state: state, rng: &rng) {
             return candidate
         }
 
         let feasibleByType = data.projects.projects.filter { template in
             template.type == chosenType && isProjectFeasible(template, state: state)
         }
-        if let candidate = rng.chooseElement(feasibleByType) {
+        if let candidate = chooseProjectTemplate(from: feasibleByType, state: state, rng: &rng) {
             return candidate
         }
 
-        return rng.chooseElement(data.projects.projects.filter { $0.type == chosenType })
+        return chooseProjectTemplate(
+            from: data.projects.projects.filter { $0.type == chosenType },
+            state: state,
+            rng: &rng
+        )
+    }
+
+    private func chooseProjectTemplate(from templates: [ProjectTemplate], state: GameState, rng: inout SeededGenerator) -> ProjectTemplate? {
+        guard !templates.isEmpty else {
+            return nil
+        }
+        let weights = templates.map { projectSelectionWeight(template: $0, state: state) }
+        if let chosenIndex = rng.chooseIndex(weights: weights) {
+            return templates[chosenIndex]
+        }
+        return rng.chooseElement(templates)
+    }
+
+    private func projectSelectionWeight(template: ProjectTemplate, state: GameState) -> Double {
+        let totalWork = template.workRequired.values.reduce(0, +)
+        let teamSize = max(1, state.teamSize)
+        var weight = 1.0
+
+        if teamSize == 1 {
+            weight *= 1.5 / (1 + (totalWork / 36.0))
+            if template.type == "CONTRACT" {
+                weight *= 1.4
+            }
+            if template.reward.mrrJPY != nil, state.metrics.cashJPY < 180_000 {
+                weight *= 0.7
+            }
+        } else if teamSize <= 3 {
+            weight *= 1.2 / (1 + (totalWork / 52.0))
+        } else {
+            weight *= 1.0 / (1 + (totalWork / 72.0))
+        }
+
+        if state.metrics.mrrJPY == 0, state.day >= 14, let mrr = template.reward.mrrJPY, mrr > 0 {
+            weight *= 1.45
+        }
+        if state.metrics.cashJPY <= 130_000, template.type == "CONTRACT" {
+            weight *= 1.35
+        }
+        if let debtDelta = template.reward.techDebt, debtDelta < 0 {
+            weight *= 1.15
+        }
+
+        return max(0.05, weight)
     }
 
     private func allocateWork(state: inout GameState) {
@@ -647,6 +694,12 @@ public struct SimulationEngine: Sendable {
 
         if let override = state.flags["maxActiveProjectsOverride"]?.intValue {
             maxCount += max(0, override)
+        }
+
+        if state.teamSize <= 1 {
+            maxCount = min(maxCount, 1)
+        } else if state.teamSize <= 3 {
+            maxCount = min(maxCount, 2)
         }
 
         return max(1, maxCount)

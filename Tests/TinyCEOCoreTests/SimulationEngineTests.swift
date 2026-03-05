@@ -300,6 +300,71 @@ func progressLockReliefInjectsMissingSupport() throws {
     #expect(secondPass == nil)
 }
 
+@Test("duplicate title cards are not generated consecutively")
+func duplicateTitleCardsAvoidConsecutiveRepeats() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let deck = CardDeckEngine(data: data)
+    var state = GameState.initial(data: data, seed: 501)
+    var rng = SeededGenerator(seed: 501)
+    state.day = 20
+    state.activeRealMinutes = 900
+
+    var generatedTitles: [String] = []
+    for cycle in 1...80 {
+        state.cycle = cycle
+        if let card = deck.maybeGenerateCycleCard(state: &state, data: data, rng: &rng) {
+            generatedTitles.append(card.title)
+            state.inbox.removeAll()
+        }
+    }
+
+    #expect(generatedTitles.count >= 20)
+    for (previous, current) in zip(generatedTitles, generatedTitles.dropFirst()) {
+        #expect(previous != current)
+    }
+}
+
+@Test("solo founder keeps one active project for faster completion pacing")
+func soloFounderKeepsOneActiveProject() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    let engine = SimulationEngine(data: data)
+    var state = GameState.initial(data: data, seed: 601)
+    var rng = SeededGenerator(seed: 601)
+    state.strategy = .contractHeavy
+
+    for _ in 0..<60 {
+        _ = engine.processRealMinute(
+            state: &state,
+            signal: ActivitySignal(bundleId: "com.microsoft.VSCode", processName: "Code", domain: nil, isIdle: false),
+            isSessionActive: true,
+            autoResolveCard: false,
+            rng: &rng
+        )
+    }
+
+    #expect(state.teamSize == 1)
+    #expect(state.activeProjects.count == 1)
+}
+
+@Test("hire card is blocked when runway would become too short")
+func hireCardBlockedWhenRunwayTooShort() throws {
+    let data = try DataLoader().loadAll(from: URL(fileURLWithPath: "data", isDirectory: true))
+    guard let hireCard = data.cards.cards.first(where: { $0.id == "CARD_HIRE_ENG_JR" }) else {
+        Issue.record("CARD_HIRE_ENG_JR not found")
+        return
+    }
+
+    var state = GameState.initial(data: data, seed: 701)
+    state.metrics.cashJPY = 45_000
+    state.metrics.mrrJPY = 0
+    var rng = SeededGenerator(seed: 701)
+    let executor = EffectExecutor(data: data)
+
+    _ = executor.apply(card: hireCard, optionIndex: 0, state: &state, data: data, rng: &rng)
+
+    #expect(state.teamSize == 1)
+}
+
 private func totalRemainingWork(_ projects: [ProjectProgress]) -> Double {
     projects.reduce(0) { partial, project in
         partial + project.workRemaining.values.reduce(0, +)

@@ -118,6 +118,10 @@ public struct EffectExecutor: Sendable {
                 logs.append("hire-capacity-full")
                 return
             }
+            if !canAffordHire(role: role, state: state, data: data) {
+                logs.append("hire-runway-short")
+                return
+            }
             let traitCount = max(0, effect.traitsRoll ?? 1)
             let traits = pickTraits(count: traitCount, rng: &rng)
             let rampDays = max(0, Int(policyModifier(op: "NEW_HIRE_RAMP_DAYS", state: state) ?? 5))
@@ -284,6 +288,38 @@ public struct EffectExecutor: Sendable {
             return partial + Int(bonus)
         }
         return max(1, state.baseEmployeeCapacity + facilityBonus)
+    }
+
+    private func canAffordHire(role: RoleDefinition, state: GameState, data: GameData) -> Bool {
+        let monthlyFixedCostBeforeHire = monthlyFixedCost(state: state, data: data)
+        let projectedMonthlyFixedCost = monthlyFixedCostBeforeHire + role.monthlySalaryJPY
+        let monthlyNetBurn = max(0, projectedMonthlyFixedCost - state.metrics.mrrJPY)
+
+        if monthlyNetBurn == 0 {
+            return true
+        }
+
+        let cash = Double(max(0, state.metrics.cashJPY))
+        let runwayMonths = cash / Double(monthlyNetBurn)
+        if state.teamSize <= 2 {
+            return runwayMonths >= 1.4
+        }
+        return runwayMonths >= 2.0
+    }
+
+    private func monthlyFixedCost(state: GameState, data: GameData) -> Int {
+        let monthlyOverhead = data.balance.economy.overheadJPYPerCompanyDay * 30
+        let employeeSalaries = state.employees.reduce(0) { partial, employee in
+            guard employee.roleId != "ROLE_FOUNDER",
+                  let role = roleByID[employee.roleId] else {
+                return partial
+            }
+            return partial + role.monthlySalaryJPY
+        }
+        let policyCosts = state.enabledPolicyIDs.reduce(0) { partial, policyID in
+            partial + (policyByID[policyID]?.monthlyCostJPY ?? 0)
+        }
+        return monthlyOverhead + employeeSalaries + policyCosts
     }
 
     private func policyModifier(op: String, state: GameState) -> Double? {
